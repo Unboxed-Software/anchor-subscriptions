@@ -21,15 +21,20 @@ pub mod plege {
 
     pub fn create_tier(
         ctx: Context<CreateTier>,
+        tier_id: u8,
         name: String,
         price: u64,
         interval: Interval,
     ) -> Result<()> {
-        instructions::create_tier(ctx, name, price, interval)
+        instructions::create_tier(ctx, tier_id, name, price, interval)
     }
 
     pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
         instructions::create_subscription(ctx)
+    }
+
+    pub fn cancel_subscription(ctx: Context<CancelSubscription>) -> Result<()> {
+        instructions::cancel_subscription(ctx)
     }
 
     pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {

@@ -4,12 +4,9 @@ use anchor_spl::token::{approve, Approve, Token, TokenAccount};
 
 #[derive(Accounts)]
 pub struct CreateSubscription<'info> {
-    #[account(mut)]
     pub app: Account<'info, App>,
     #[account(mut,
         constraint = tier.app == app.key(),
-        seeds = ["SUBSCRIPTION_TIER".as_bytes(), app.key().as_ref()],
-        bump,
     )]
     pub tier: Account<'info, Tier>,
     #[account(init,

@@ -36,7 +36,7 @@ describe("plege", () => {
 
   it("create tier", async () => {
     await global.program.methods
-      .createTier("Test Tier", new BN(10), { month: {} })
+      .createTier(new BN(1), "Test Tier", new BN(10), { month: {} })
       .accounts({
         app,
         mint,
@@ -100,6 +100,49 @@ describe("plege", () => {
     expect(subscriptionPDA.amountPaid.toNumber()).to.equal(10)
     expect(Number(ownerATA.amount)).to.equal(10)
   })
+
+  it("cancels subscription", async () => {
+    await global.program.methods
+      .cancelSubscription()
+      .accounts({
+        app,
+        tier,
+        subscriber: global.testKeypairs.subscriber.publicKey,
+        subscriberAta,
+      })
+      .signers([global.testKeypairs.subscriber])
+      .rpc()
+
+    const subscriptionPDA = await global.connection.getAccountInfo(subscription)
+    expect(subscriptionPDA).to.equal(null)
+  })
+
+  it("creates subscription again", async () => {
+    await global.program.methods
+      .createSubscription()
+      .accounts({
+        app,
+        tier,
+        subscriber: global.testKeypairs.subscriber.publicKey,
+        subscriberAta,
+      })
+      .signers([global.testKeypairs.subscriber])
+      .rpc()
+
+    const subscriptionPDA = await global.program.account.subscription.fetch(
+      subscription
+    )
+
+    expect(subscriptionPDA.app.toBase58()).to.equal(app.toBase58())
+    expect(subscriptionPDA.tier.toBase58()).to.equal(tier.toBase58())
+    expect(subscriptionPDA.subscriber.toBase58()).to.equal(
+      global.testKeypairs.subscriber.publicKey.toBase58()
+    )
+    const startTime = new Date(subscriptionPDA.start * 1000)
+    expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
+    expect(subscriptionPDA.amountPaid.toNumber()).to.equal(0)
+    expect(subscriptionPDA.active).to.equal(true)
+  })
 })
 
 let mint, colossalAta, subscriberAta, hackerAta, app, tier, subscription
@@ -113,7 +156,11 @@ before(async () => {
     global.program.programId
   )
   ;[tier] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("SUBSCRIPTION_TIER"), app.toBuffer()],
+    [
+      Buffer.from("SUBSCRIPTION_TIER"),
+      app.toBuffer(),
+      new BN([1]).toArrayLike(Buffer, "be", 1),
+    ],
     global.program.programId
   )
   ;[subscription] = anchor.web3.PublicKey.findProgramAddressSync(

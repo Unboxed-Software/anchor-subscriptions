@@ -14,9 +14,7 @@ pub struct CompletePayment<'info> {
     #[account(mut)]
     pub app: Account<'info, App>,
     #[account(mut,
-        constraint = {msg!("tier");tier.app == app.key() && tier.key() == subscription.tier},
-        seeds = ["SUBSCRIPTION_TIER".as_bytes(), app.key().as_ref()],
-        bump,
+        constraint = tier.app == app.key() && tier.key() == subscription.tier,
     )]
     pub tier: Account<'info, Tier>,
     #[account(mut,

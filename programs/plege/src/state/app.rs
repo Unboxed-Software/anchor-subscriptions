@@ -4,4 +4,5 @@ use anchor_lang::prelude::*;
 pub struct App {
     pub auth: Pubkey,
     pub name: String,
+    pub num_tiers: u8,
 }
