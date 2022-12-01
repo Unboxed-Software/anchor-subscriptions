@@ -1,6 +1,7 @@
 [features]
 seeds = true
 skip-lint = false
+
 [programs.localnet]
 plege = "CoQBfJd641bD85WYv6g2vXZvD6ae43b63VyQ1DBeXgAs"
 

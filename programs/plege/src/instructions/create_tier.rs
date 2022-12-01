@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 use crate::state::*;
+use crate::error::PledgeError;
 
 #[derive(Accounts)]
 #[instruction(tier_id: u8)]
@@ -15,7 +16,7 @@ pub struct CreateTier<'info> {
     pub tier: Account<'info, Tier>,
     #[account(
         mut,
-        constraint = tier_id == app.num_tiers + 1 @ TierCreationError::InvalidTierId
+        constraint = tier_id == app.num_tiers + 1 @ PledgeError::InvalidTierId
     )]
     pub app: Account<'info, App>,
     pub mint: Account<'info, Mint>,
@@ -39,9 +40,4 @@ pub fn create_tier(ctx: Context<CreateTier>, _tier_id: u8, name: String, price: 
     app.num_tiers += 1;
 
     Ok(())
-}
-
-#[error_code]
-pub enum TierCreationError {
-    InvalidTierId
 }

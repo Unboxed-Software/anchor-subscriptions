@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+use crate::error::PledgeError;
 use crate::state::*;
 
 #[derive(Accounts)]
@@ -17,7 +18,7 @@ pub struct CreateApp<'info> {
         seeds = ["USER_META".as_bytes(), auth.key().as_ref()],
         bump,
         has_one = auth,
-        constraint = app_id == user_meta.num_apps + 1 @ AppCreationError::InvalidAppId,
+        constraint = app_id == user_meta.num_apps + 1 @ PledgeError::InvalidAppId,
     )]
     pub user_meta: Account<'info, UserMeta>,
     #[account(mut)]
@@ -34,10 +35,4 @@ pub fn create_app(ctx: Context<CreateApp>, _app_id: u8, name: String) -> Result<
     ctx.accounts.user_meta.num_apps += 1;
 
     Ok(())
-}
-
-#[error_code]
-pub enum AppCreationError {
-    #[msg("Invalid App ID")]
-    InvalidAppId,
 }
