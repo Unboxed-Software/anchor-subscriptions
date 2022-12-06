@@ -551,6 +551,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "chrono",
  "mpl-token-metadata",
  "num",
 ]
@@ -1168,15 +1169,6 @@ name = "regex-syntax"
 version = "0.6.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
-
-[[package]]
-name = "royalties"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "chrono",
-]
 
 [[package]]
 name = "rustc_version"

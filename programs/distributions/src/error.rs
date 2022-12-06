@@ -5,4 +5,6 @@ pub enum DistributionError {
     InsufficientFunds,
     InvalidMetadata,
     InvalidCollectionDetails,
+    ZeroCollectionSize,
+    ZeroDistribution,
 }
