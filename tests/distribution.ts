@@ -99,6 +99,15 @@ describe("distributions", () => {
       collectionAuthority: authorityKeypair,
     });
 
+    let memberNFT = await metaplex.nfts().create({
+      name: "Member NFT",
+      uri: "https://example.com/my-nft",
+      symbol: "MEMBER",
+      sellerFeeBasisPoints: 250,
+      collection: collectionNFT.mintAddress,
+      collectionAuthority: authorityKeypair,
+    });
+
     let [royaltyCollectedTreasuryAddress] = findRoyaltyCollectedTreasuryAddress(
       treasuryTokenMint,
       collectionNFT.mintAddress,

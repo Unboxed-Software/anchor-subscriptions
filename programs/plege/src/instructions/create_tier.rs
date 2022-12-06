@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
-use crate::state::*;
 use crate::error::PledgeError;
+use crate::state::*;
 
 #[derive(Accounts)]
 #[instruction(tier_id: u8)]
@@ -27,7 +27,13 @@ pub struct CreateTier<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_tier(ctx: Context<CreateTier>, _tier_id: u8, name: String, price: u64, interval: Interval) -> Result<()> {
+pub fn create_tier(
+    ctx: Context<CreateTier>,
+    _tier_id: u8,
+    name: String,
+    price: u64,
+    interval: Interval,
+) -> Result<()> {
     let tier = &mut ctx.accounts.tier;
     let app = &mut ctx.accounts.app;
     let mint = ctx.accounts.mint.clone();

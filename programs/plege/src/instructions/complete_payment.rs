@@ -1,8 +1,8 @@
 use std::cmp::max;
 
+use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
-use crate::state::*;
 use chrono::*;
 
 #[derive(Accounts)]
@@ -40,7 +40,7 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
     let now_timestamp = Clock::get().unwrap().unix_timestamp;
     let intervals = intervals_since_start(subscription.start, now_timestamp, tier.interval);
 
-    let total = (intervals as u64)*tier.price;
+    let total = (intervals as u64) * tier.price;
     let balance = total - subscription.amount_paid;
     msg!("balance is {:?}", balance);
     let transfer_accounts = Transfer {
@@ -48,16 +48,21 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
         to: owner.clone(),
         authority: subscription.to_account_info().clone(),
     };
-    
+
     let app_key = app.key();
     let subscriber_key = subscription.subscriber;
     let subscription_bump = subscription.bump;
-    let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
+    let seeds = &[
+        "SUBSCRIPTION".as_bytes(),
+        app_key.as_ref(),
+        subscriber_key.as_ref(),
+        &[subscription_bump],
+    ];
     let signers = [&seeds[..]];
     let transfer_amount = balance;
 
     let transfer_ctx =
-            CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
+        CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
 
     transfer(transfer_ctx, transfer_amount)?;
 
@@ -72,7 +77,7 @@ pub fn intervals_since_start(start: i64, now: i64, interval: Interval) -> u32 {
 
     match interval {
         Interval::Month => months_since_start(start, now) + 1,
-        Interval::Year => years_since_start(start, now) + 1
+        Interval::Year => years_since_start(start, now) + 1,
     }
 }
 
@@ -80,7 +85,7 @@ pub fn months_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
     let years = now.year() - start.year();
     let months = now.month() - start.month();
 
-    let mut months = (years as u32)*12 + months;
+    let mut months = (years as u32) * 12 + months;
     if now.day() < start.day() {
         months -= 1;
     }
@@ -90,8 +95,7 @@ pub fn months_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
 
 pub fn years_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
     let years = now.year() - start.year();
-    if (now.month() == start.month() && now.day() >= start.day()) ||
-        now.month() > start.month() {
+    if (now.month() == start.month() && now.day() >= start.day()) || now.month() > start.month() {
         return years as u32;
     } else {
         return max(0, (years as u32) - 1);

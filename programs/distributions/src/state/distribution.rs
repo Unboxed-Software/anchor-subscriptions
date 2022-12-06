@@ -8,4 +8,9 @@ pub struct Distribution {
     pub amount_per_share: u64,
     pub recipient_count: u64,
     pub date: String,
+    pub token_account: Pubkey,
+    pub bump: u8,
 }
+
+#[account]
+pub struct Receipt {}

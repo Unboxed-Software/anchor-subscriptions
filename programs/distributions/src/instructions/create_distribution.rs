@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use mpl_token_metadata::{
     assertions::assert_owned_by,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
@@ -10,7 +10,7 @@ use num::rational::Ratio;
 
 use crate::{
     error::DistributionError,
-    state::{Distribution, RoyaltyCollectedTreasury},
+    state::{Distribution, RoyaltyCollectedTreasury, DISTRIBUTION, ROYALTIES, TOKEN},
 };
 
 #[derive(Accounts)]
@@ -20,7 +20,7 @@ pub struct CreateDistribution<'info> {
         init,
         space = 10000, // TODO: Properly size this account.
         seeds = [
-            b"distribution".as_ref(),
+            DISTRIBUTION.as_ref(),
             treasury.key().as_ref(),
             date.as_ref()
         ],
@@ -28,26 +28,60 @@ pub struct CreateDistribution<'info> {
         payer = treasury_authority,
     )]
     pub distribution: Account<'info, Distribution>,
+    #[account(
+        init,
+        payer = treasury_authority,
+        seeds = [
+            TOKEN.as_ref(),
+            DISTRIBUTION.as_ref(),
+            distribution.key().as_ref(),
+            mint.key().as_ref()
+        ],
+        bump,
+        token::mint = mint,
+        token::authority = distribution
+    )]
     pub distribution_token_account: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        seeds = [
+            TOKEN.as_ref(),
+            ROYALTIES.as_ref(),
+            treasury.key().as_ref(),
+            mint.key().as_ref()
+        ],
+        bump,
+        token::mint = mint,
+        token::authority = treasury
+    )]
     pub royalties_token_account: Account<'info, TokenAccount>,
     pub shareholder_nft_collection_mint: Account<'info, Mint>,
+    pub mint: Account<'info, Mint>,
     /// CHECK: We are manually deserializing the metadata account, and performing assertions
     pub shareholder_nft_collection_metadata: UncheckedAccount<'info>,
     pub treasury: Account<'info, RoyaltyCollectedTreasury>,
     #[account(mut)]
     pub treasury_authority: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_distribution(ctx: Context<CreateDistribution>, date: String) -> Result<()> {
+pub fn create_distribution(
+    ctx: Context<CreateDistribution>,
+    date: String,
+    amount: u64,
+) -> Result<()> {
     let distribution = &mut ctx.accounts.distribution;
     // TODO: 1. ensure that there are sufficient funds in the royalties token account
     // to be transferred to the distribution token account.
     let treasury = &mut ctx.accounts.treasury;
-    let _royalties_token_account = &mut ctx.accounts.royalties_token_account;
+    let royalties_token_account = &mut ctx.accounts.royalties_token_account;
     let distribution_token_account = &mut ctx.accounts.distribution_token_account;
     let shareholder_nft_collection_mint = &ctx.accounts.shareholder_nft_collection_mint;
     let maybe_collection_metadata = &ctx.accounts.shareholder_nft_collection_metadata;
+    let mint = &ctx.accounts.mint;
+    let token_program = &ctx.accounts.token_program;
 
     // 1. make sure the metadata is owned by mpl token program
     assert_owned_by(
@@ -84,16 +118,37 @@ pub fn create_distribution(ctx: Context<CreateDistribution>, date: String) -> Re
         return Err(DistributionError::ZeroDistribution.into());
     }
 
-    // TODO: Maybe this needs to be paramaterized with an amount.
     // 6. transfer from the royalties account to the distribution account
-    // let transfer_context = CpiContext::new_with_signer()
-    // anchor_spl::token::transfer()?;
+    let transfer_accounts = token::Transfer {
+        from: royalties_token_account.to_account_info(),
+        to: distribution_token_account.to_account_info(),
+        authority: distribution.to_account_info(),
+    };
+
+    let bump_vec = [treasury.bump];
+    let mint_key = mint.key();
+    let shareholder_nft_collection_mint_key = shareholder_nft_collection_mint.key();
+    let signer_seeds: &[&[&[u8]]] = &[&[
+        b"royalty_collected_treasury".as_ref(),
+        mint_key.as_ref(),
+        shareholder_nft_collection_mint_key.as_ref(),
+        bump_vec.as_ref(),
+    ]];
+
+    let transfer_context = CpiContext::new_with_signer(
+        token_program.to_account_info(),
+        transfer_accounts,
+        signer_seeds,
+    );
+
+    token::transfer(transfer_context, amount)?;
 
     // 7. set the distribution state
     distribution.treasury = treasury.key();
-    distribution.amount_total = distribution_token_account.amount;
+    distribution.amount_total = amount;
     distribution.recipient_count = collection_size;
     distribution.date = date;
+    distribution.token_account = distribution_token_account.key();
     distribution.amount_per_share =
         Ratio::new(distribution.amount_total, distribution.recipient_count).to_integer();
 

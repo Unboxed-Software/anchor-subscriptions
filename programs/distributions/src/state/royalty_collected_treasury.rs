@@ -9,4 +9,6 @@ pub struct RoyaltyCollectedTreasury {
     pub shareholder_nft_collection_mint: Pubkey,
     pub total_inflows: u64,
     pub total_royalties: u64,
+    pub royalty_percentage: u8,
+    pub bump: u8,
 }

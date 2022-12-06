@@ -14,11 +14,16 @@ pub mod distributions {
 
     pub fn create_royalty_collected_treasury(
         ctx: Context<CreateRoyaltyCollectedTreasury>,
+        royalty_percentage: u8,
     ) -> Result<()> {
-        instructions::create_royalty_collected_treasury(ctx)
+        instructions::create_royalty_collected_treasury(ctx, royalty_percentage)
     }
 
-    pub fn create_distribution(ctx: Context<CreateDistribution>, date: String) -> Result<()> {
-        instructions::create_distribution(ctx, date)
+    pub fn create_distribution(
+        ctx: Context<CreateDistribution>,
+        date: String,
+        amount: u64,
+    ) -> Result<()> {
+        instructions::create_distribution(ctx, date, amount)
     }
 }
