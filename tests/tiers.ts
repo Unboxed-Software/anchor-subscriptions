@@ -108,7 +108,7 @@ describe("tier functionality", () => {
     expect(subscription1PDA)
   })
 
-  it("tier can be disabled", async () => {
+  it("disabled tier cannot add subscribers", async () => {
     await global.program.methods
       .disableTier()
       .accounts({
@@ -133,6 +133,38 @@ describe("tier functionality", () => {
     } catch (error) {
       expect(error.error.errorCode.number).to.equal(2003)
     }
+  })
+
+  it("disabling a tier stops future payments", async () => {
+    await global.program.methods
+      .createSubscription()
+      .accounts({
+        app,
+        tier,
+        subscriber: subscriber1.publicKey,
+        subscriberAta: subscriber1Ata,
+      })
+      .signers([subscriber1])
+      .rpc()
+
+    const subscription1 = subscriptionAccountKey(subscriber1.publicKey, app)
+
+    await global.program.methods
+      .disableTier()
+      .accounts({
+        app,
+        tier,
+        auth: auth.publicKey,
+      })
+      .signers([auth])
+      .rpc()
+
+    let destination = await createAssociatedTokenAccount(
+      global.connection,
+      auth,
+      global.mint,
+      auth.publicKey
+    )
 
     try {
       await global.program.methods
@@ -140,9 +172,9 @@ describe("tier functionality", () => {
         .accounts({
           app,
           tier,
-          owner: auth.publicKey,
-          subscriber2Ata,
-          subscription,
+          destination: destination,
+          subscriberAta: subscriber1Ata,
+          subscription: subscription1,
         })
         .rpc()
     } catch (error) {

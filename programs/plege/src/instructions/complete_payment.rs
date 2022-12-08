@@ -19,9 +19,9 @@ pub struct CompletePayment<'info> {
     )]
     pub tier: Account<'info, Tier>,
     #[account(mut,
-        constraint = {msg!("owner"); owner.owner == app.auth.key() && owner.mint == tier.mint},
+        constraint = {msg!("destination"); destination.owner == app.treasury.key() && destination.mint == tier.mint},
     )]
-    pub owner: Account<'info, TokenAccount>,
+    pub destination: Account<'info, TokenAccount>,
     #[account(mut, constraint = {msg!("subscriber_ata"); subscriber_ata.owner == subscription.subscriber.key()
         && subscriber_ata.mint == tier.mint && subscriber_ata.amount >= tier.price},
     )]
@@ -34,7 +34,7 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
     let subscription = &mut ctx.accounts.subscription;
     let app = &mut ctx.accounts.app;
     let tier = &mut ctx.accounts.tier;
-    let owner = ctx.accounts.owner.to_account_info();
+    let destination = ctx.accounts.destination.to_account_info();
     let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
 
@@ -46,7 +46,7 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
     msg!("balance is {:?}", balance);
     let transfer_accounts = Transfer {
         from: subscriber_ata.clone(),
-        to: owner.clone(),
+        to: destination.clone(),
         authority: subscription.to_account_info().clone(),
     };
     

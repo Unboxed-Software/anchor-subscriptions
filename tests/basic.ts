@@ -85,7 +85,7 @@ describe("basic flow", () => {
       .accounts({
         app,
         tier,
-        owner: colossalAta,
+        destination: colossalAta,
         subscriberAta,
         subscription,
       })
