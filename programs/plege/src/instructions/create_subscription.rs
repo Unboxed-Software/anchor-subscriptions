@@ -6,7 +6,9 @@ use anchor_spl::token::{approve, Approve, Token, TokenAccount};
 pub struct CreateSubscription<'info> {
     pub app: Account<'info, App>,
     #[account(mut,
-        constraint = tier.app == app.key(),
+        has_one = app,
+        constraint = tier.active == true,
+        constraint = tier.accepting_new_subs == true
     )]
     pub tier: Account<'info, Tier>,
     #[account(init,

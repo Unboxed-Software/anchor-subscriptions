@@ -36,6 +36,8 @@ pub fn create_tier(ctx: Context<CreateTier>, _tier_id: u8, name: String, price: 
     tier.mint = mint.key();
     tier.price = price;
     tier.interval = interval;
+    tier.accepting_new_subs = true;
+    tier.active = true;
 
     app.num_tiers += 1;
 

@@ -1,7 +1,8 @@
 import { Program, web3 } from "@project-serum/anchor"
 import * as anchor from "@project-serum/anchor"
-import { Plege } from "../target/types/plege"
-import generateFundedKeypair from "./utils/keypair"
+import { Plege } from "../../target/types/plege"
+import generateFundedKeypair from "./keypair"
+import { createMint } from "@solana/spl-token"
 
 var connection: web3.Connection
 var program
@@ -13,8 +14,15 @@ exports.mochaGlobalSetup = async function () {
   connection = program.provider.connection
   global.program = program
   global.connection = connection
-
   await setTestKeypairs()
+
+  global.mint = await createMint(
+    global.connection,
+    global.testKeypairs.colossal,
+    global.testKeypairs.colossal.publicKey,
+    global.testKeypairs.colossal.publicKey,
+    5
+  )
 }
 
 async function setTestKeypairs() {
