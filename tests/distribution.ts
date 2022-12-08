@@ -28,6 +28,32 @@ function findRoyaltyCollectedTreasuryAddress(
   ], programId);
 }
 
+function findTreasuryTokenAccountAddress(
+  royaltyCollectedTreasuryAddress: PublicKey,
+  mintAddress: PublicKey,
+  programId: PublicKey,
+) {
+  return PublicKey.findProgramAddressSync([
+    Buffer.from("token"),
+    Buffer.from("treasury"),
+    royaltyCollectedTreasuryAddress.toBuffer(),
+    mintAddress.toBuffer(),
+  ], programId);
+}
+
+function findRoyaltiesTokenAccountAddress(
+  royaltyCollectedTreasuryAddress: PublicKey,
+  mintAddress: PublicKey,
+  programId: PublicKey,
+) {
+  return PublicKey.findProgramAddressSync([
+    Buffer.from("token"),
+    Buffer.from("royalties"),
+    royaltyCollectedTreasuryAddress.toBuffer(),
+    mintAddress.toBuffer(),
+  ], programId);
+}
+
 function findDistributionAddress(
   royaltyCollectedTreasury: PublicKey,
   date: String,
@@ -37,6 +63,19 @@ function findDistributionAddress(
     Buffer.from("distribution"),
     royaltyCollectedTreasury.toBuffer(),
     Buffer.from(date),
+  ], programId);
+}
+
+function findDistributionTokenAccountAddress(
+  distributionAddress: PublicKey,
+  mintAddress: PublicKey,
+  programId: PublicKey,
+) {
+  return PublicKey.findProgramAddressSync([
+    Buffer.from("token"),
+    Buffer.from("distribution"),
+    distributionAddress.toBuffer(),
+    mintAddress.toBuffer(),
   ], programId);
 }
 
@@ -50,12 +89,6 @@ describe("distributions", () => {
     let authorityKeypair = await generateFundedKeypair(
       anchor.getProvider().connection,
     );
-    let thirdPartyKeypair = await generateFundedKeypair(
-      anchor.getProvider().connection,
-    );
-    let anotherKeypair = await generateFundedKeypair(
-      anchor.getProvider().connection,
-    );
 
     const metaplex = Metaplex.make(anchor.getProvider().connection)
       .use(keypairIdentity(authorityKeypair))
@@ -67,27 +100,6 @@ describe("distributions", () => {
       authorityKeypair.publicKey,
       authorityKeypair.publicKey,
       0,
-    );
-
-    let treasuryTokenAccount = await createAssociatedTokenAccount(
-      anchor.getProvider().connection,
-      authorityKeypair,
-      treasuryTokenMint,
-      authorityKeypair.publicKey,
-    );
-
-    let royaltiesTokenAccount = await createAssociatedTokenAccount(
-      anchor.getProvider().connection,
-      thirdPartyKeypair,
-      treasuryTokenMint,
-      thirdPartyKeypair.publicKey,
-    );
-
-    let distributionTokenAccount = await createAssociatedTokenAccount(
-      anchor.getProvider().connection,
-      anotherKeypair,
-      treasuryTokenMint,
-      anotherKeypair.publicKey,
     );
 
     let collectionNFT = await metaplex.nfts().create({
@@ -114,8 +126,21 @@ describe("distributions", () => {
       program.programId,
     );
 
+    let [treasuryTokenAccount] = findTreasuryTokenAccountAddress(
+      royaltyCollectedTreasuryAddress,
+      treasuryTokenMint,
+      program.programId,
+    );
+
+    let [royaltiesTokenAccount] = findRoyaltiesTokenAccountAddress(
+      royaltyCollectedTreasuryAddress,
+      treasuryTokenMint,
+      program.programId,
+    );
+
+    let royaltyPercentage = 3;
     let createTreasuryIx = await program.methods
-      .createRoyaltyCollectedTreasury().accounts({
+      .createRoyaltyCollectedTreasury(royaltyPercentage).accounts({
         royaltyCollectedTreasury: royaltyCollectedTreasuryAddress,
         authority: authorityKeypair.publicKey,
         mint: treasuryTokenMint,
@@ -141,14 +166,23 @@ describe("distributions", () => {
       program.programId,
     );
 
+    let [distributionTokenAccount] = findDistributionTokenAccountAddress(
+      distributionAddress,
+      treasuryTokenMint,
+      program.programId,
+    );
+
+    let amount = new BN(10);
     let createDistributionIx = await program.methods.createDistribution(
       date,
+      amount,
     ).accounts({
       distribution: distributionAddress,
       treasury: royaltyCollectedTreasuryAddress,
       treasuryAuthority: authorityKeypair.publicKey,
       distributionTokenAccount,
       royaltiesTokenAccount,
+      mint: treasuryTokenMint,
       shareholderNftCollectionMetadata: collectionNFT.metadataAddress,
       shareholderNftCollectionMint: collectionNFT.mintAddress,
       systemProgram: SystemProgram.programId,

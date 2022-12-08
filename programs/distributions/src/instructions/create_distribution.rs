@@ -10,7 +10,10 @@ use num::rational::Ratio;
 
 use crate::{
     error::DistributionError,
-    state::{Distribution, RoyaltyCollectedTreasury, DISTRIBUTION, ROYALTIES, TOKEN},
+    state::{
+        Distribution, RoyaltyCollectedTreasury, DISTRIBUTION, ROYALTIES,
+        ROYALTY_COLLECTED_TREASURY, TOKEN,
+    },
 };
 
 #[derive(Accounts)]
@@ -18,7 +21,7 @@ use crate::{
 pub struct CreateDistribution<'info> {
     #[account(
         init,
-        space = 10000, // TODO: Properly size this account.
+        space = 1000, // TODO: Properly size this account.
         seeds = [
             DISTRIBUTION.as_ref(),
             treasury.key().as_ref(),
@@ -27,7 +30,7 @@ pub struct CreateDistribution<'info> {
         bump,
         payer = treasury_authority,
     )]
-    pub distribution: Account<'info, Distribution>,
+    pub distribution: Box<Account<'info, Distribution>>,
     #[account(
         init,
         payer = treasury_authority,
@@ -59,7 +62,7 @@ pub struct CreateDistribution<'info> {
     pub mint: Account<'info, Mint>,
     /// CHECK: We are manually deserializing the metadata account, and performing assertions
     pub shareholder_nft_collection_metadata: UncheckedAccount<'info>,
-    pub treasury: Account<'info, RoyaltyCollectedTreasury>,
+    pub treasury: Box<Account<'info, RoyaltyCollectedTreasury>>,
     #[account(mut)]
     pub treasury_authority: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -72,29 +75,32 @@ pub fn create_distribution(
     date: String,
     amount: u64,
 ) -> Result<()> {
-    let distribution = &mut ctx.accounts.distribution;
+    // let distribution = &mut ctx.accounts.distribution;
     // TODO: 1. ensure that there are sufficient funds in the royalties token account
     // to be transferred to the distribution token account.
-    let treasury = &mut ctx.accounts.treasury;
-    let royalties_token_account = &mut ctx.accounts.royalties_token_account;
-    let distribution_token_account = &mut ctx.accounts.distribution_token_account;
-    let shareholder_nft_collection_mint = &ctx.accounts.shareholder_nft_collection_mint;
-    let maybe_collection_metadata = &ctx.accounts.shareholder_nft_collection_metadata;
-    let mint = &ctx.accounts.mint;
-    let token_program = &ctx.accounts.token_program;
+    // let treasury = &mut ctx.accounts.treasury;
+    // let royalties_token_account = &mut ctx.accounts.royalties_token_account;
+    // let distribution_token_account = &mut ctx.accounts.distribution_token_account;
+    // let shareholder_nft_collection_mint = &ctx.accounts.shareholder_nft_collection_mint;
+    // let maybe_collection_metadata = &ctx.accounts.shareholder_nft_collection_metadata;
+    // let mint = &ctx.accounts.mint;
+    // let token_program = &ctx.accounts.token_program;
 
     // 1. make sure the metadata is owned by mpl token program
     assert_owned_by(
-        &maybe_collection_metadata.to_account_info(),
+        &ctx.accounts
+            .shareholder_nft_collection_metadata
+            .to_account_info(),
         &mpl_token_metadata::id(),
     )?;
 
     // 2. make sure the metadata can be deserialized
-    let collection_metadata = Metadata::from_account_info(maybe_collection_metadata.borrow())
-        .map_err(|_| DistributionError::InvalidMetadata)?;
+    let collection_metadata =
+        Metadata::from_account_info(ctx.accounts.shareholder_nft_collection_metadata.borrow())
+            .map_err(|_| DistributionError::InvalidMetadata)?;
 
     // 3. make sure the metadata belongs to the mint.
-    if collection_metadata.mint != shareholder_nft_collection_mint.key() {
+    if collection_metadata.mint != ctx.accounts.shareholder_nft_collection_mint.key() {
         return Err(DistributionError::InvalidMetadata.into());
     }
 
@@ -114,41 +120,45 @@ pub fn create_distribution(
         return Err(DistributionError::ZeroCollectionSize.into());
     }
 
-    if distribution_token_account.amount == 0 {
+    if ctx.accounts.distribution_token_account.amount == 0 {
         return Err(DistributionError::ZeroDistribution.into());
     }
 
+    msg!("got past collections validation");
+
     // 6. transfer from the royalties account to the distribution account
     let transfer_accounts = token::Transfer {
-        from: royalties_token_account.to_account_info(),
-        to: distribution_token_account.to_account_info(),
-        authority: distribution.to_account_info(),
+        from: ctx.accounts.royalties_token_account.to_account_info(),
+        to: ctx.accounts.distribution_token_account.to_account_info(),
+        authority: ctx.accounts.distribution.to_account_info(),
     };
 
-    let bump_vec = [treasury.bump];
-    let mint_key = mint.key();
-    let shareholder_nft_collection_mint_key = shareholder_nft_collection_mint.key();
+    let bump_vec = [ctx.accounts.treasury.bump];
+    let mint_key = ctx.accounts.mint.key();
+    let shareholder_nft_collection_mint_key = ctx.accounts.shareholder_nft_collection_mint.key();
     let signer_seeds: &[&[&[u8]]] = &[&[
-        b"royalty_collected_treasury".as_ref(),
+        ROYALTY_COLLECTED_TREASURY.as_ref(),
         mint_key.as_ref(),
         shareholder_nft_collection_mint_key.as_ref(),
         bump_vec.as_ref(),
     ]];
 
     let transfer_context = CpiContext::new_with_signer(
-        token_program.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
         transfer_accounts,
         signer_seeds,
     );
 
     token::transfer(transfer_context, amount)?;
+    msg!("got past token transfer");
 
+    let distribution = &mut ctx.accounts.distribution;
     // 7. set the distribution state
-    distribution.treasury = treasury.key();
+    distribution.treasury = ctx.accounts.treasury.key();
     distribution.amount_total = amount;
     distribution.recipient_count = collection_size;
     distribution.date = date;
-    distribution.token_account = distribution_token_account.key();
+    distribution.token_account = ctx.accounts.distribution_token_account.key();
     distribution.amount_per_share =
         Ratio::new(distribution.amount_total, distribution.recipient_count).to_integer();
 

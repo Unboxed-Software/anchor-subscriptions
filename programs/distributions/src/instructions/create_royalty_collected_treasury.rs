@@ -17,7 +17,7 @@ pub struct CreateRoyaltyCollectedTreasury<'info> {
     #[account(
         init,
         payer = authority,
-        space = 10000,
+        space = 1000,
         seeds = [
             ROYALTY_COLLECTED_TREASURY.as_ref(),
             mint.key().as_ref(),
