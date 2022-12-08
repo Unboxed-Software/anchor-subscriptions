@@ -42,8 +42,7 @@ pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     subscription.subscriber = subscriber.clone().key();
     // subscription.expiration = Clock::get().unwrap().unix_timestamp + (tier.interval as i64);
     subscription.start = Clock::get().unwrap().unix_timestamp;
-    subscription.amount_paid = 0;
-    subscription.active = true;
+    subscription.active_through = subscription.start;
     subscription.bump = *ctx.bumps.get("subscription").unwrap();
 
     // approve

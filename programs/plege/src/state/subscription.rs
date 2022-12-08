@@ -1,4 +1,3 @@
-use crate::borsh::{BorshDeserialize, BorshSerialize};
 use anchor_lang::prelude::*;
 
 #[account]
@@ -7,7 +6,6 @@ pub struct Subscription {
     pub tier: Pubkey,
     pub subscriber: Pubkey,
     pub start: i64,
-    pub amount_paid: u64,
-    pub active: bool,
+    pub active_through: i64,
     pub bump: u8,
 }

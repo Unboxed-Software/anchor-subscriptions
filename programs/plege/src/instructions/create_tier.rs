@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 use crate::state::*;
-use crate::error::PledgeError;
+use crate::error::PlegeError;
 
 #[derive(Accounts)]
 #[instruction(tier_id: u8)]
@@ -16,7 +16,7 @@ pub struct CreateTier<'info> {
     pub tier: Account<'info, Tier>,
     #[account(
         mut,
-        constraint = tier_id == app.num_tiers + 1 @ PledgeError::InvalidTierId
+        constraint = tier_id == app.num_tiers + 1 @ PlegeError::InvalidTierId
     )]
     pub app: Account<'info, App>,
     pub mint: Account<'info, Mint>,

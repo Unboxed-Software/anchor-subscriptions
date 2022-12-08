@@ -1,9 +1,7 @@
-use std::cmp::max;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 use crate::state::*;
-use chrono::*;
+use crate::error::PlegeError;
 
 #[derive(Accounts)]
 pub struct CompletePayment<'info> {
@@ -39,12 +37,15 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
     let token_program = ctx.accounts.token_program.to_account_info();
 
     let now_timestamp = Clock::get().unwrap().unix_timestamp;
-    let intervals = intervals_since_start(subscription.start, now_timestamp, tier.interval);
 
-    let total = (intervals as u64)*tier.price;
-    let balance = total - subscription.amount_paid;
+    let last_pay_period: i64 = subscription.active_through;
+
+    require!(now_timestamp - last_pay_period < 60 * 60 * 24, PlegeError::MissedPayment);
+
+    let balance = tier.price;
+
     msg!("balance is {:?}", balance);
-    let transfer_accounts = Transfer {
+    let transfer_accounts = Transfer {  
         from: subscriber_ata.clone(),
         to: destination.clone(),
         authority: subscription.to_account_info().clone(),
@@ -62,39 +63,40 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
 
     transfer(transfer_ctx, transfer_amount)?;
 
-    subscription.amount_paid = total;
+    subscription.active_through = tier.interval.increment(last_pay_period);
 
     Ok(())
 }
 
-pub fn intervals_since_start(start: i64, now: i64, interval: Interval) -> u32 {
-    let now = NaiveDateTime::from_timestamp_opt(now, 0).unwrap();
-    let start = NaiveDateTime::from_timestamp_opt(start, 0).unwrap();
 
-    match interval {
-        Interval::Month => months_since_start(start, now) + 1,
-        Interval::Year => years_since_start(start, now) + 1
-    }
-}
+// pub fn intervals_since_start(start: i64, now: i64, interval: Interval) -> u32 {
+//     let now = NaiveDateTime::from_timestamp_opt(now, 0).unwrap();
+//     let start = NaiveDateTime::from_timestamp_opt(start, 0).unwrap();
 
-pub fn months_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
-    let years = now.year() - start.year();
-    let months = now.month() - start.month();
+//     match interval {
+//         Interval::Month => months_since_start(start, now) + 1,
+//         Interval::Year => years_since_start(start, now) + 1
+//     }
+// }
 
-    let mut months = (years as u32)*12 + months;
-    if now.day() < start.day() {
-        months -= 1;
-    }
+// pub fn months_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
+//     let years = now.year() - start.year();
+//     let months = now.month() - start.month();
 
-    return months;
-}
+//     let mut months = (years as u32)*12 + months;
+//     if now.day() < start.day() {
+//         months -= 1;
+//     }
 
-pub fn years_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
-    let years = now.year() - start.year();
-    if (now.month() == start.month() && now.day() >= start.day()) ||
-        now.month() > start.month() {
-        return years as u32;
-    } else {
-        return max(0, (years as u32) - 1);
-    }
-}
+//     return months;
+// }
+
+// pub fn years_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
+//     let years = now.year() - start.year();
+//     if (now.month() == start.month() && now.day() >= start.day()) ||
+//         now.month() > start.month() {
+//         return years as u32;
+//     } else {
+//         return max(0, (years as u32) - 1);
+//     }
+// }
