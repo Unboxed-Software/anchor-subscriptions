@@ -1,14 +1,13 @@
 import * as anchor from "@project-serum/anchor"
 import {
   createAssociatedTokenAccount,
-  createMint,
   getAccount,
   mintToChecked,
 } from "@solana/spl-token"
-import { BN } from "bn.js"
+import { BN } from "@project-serum/anchor"
 import { expect } from "chai"
 
-describe("plege", () => {
+describe("basic flow", () => {
   it("creates user", async () => {
     await global.program.methods
       .createUser()
@@ -24,6 +23,7 @@ describe("plege", () => {
       .createApp(1, "Test App")
       .accounts({
         auth: global.testKeypairs.colossal.publicKey,
+        treasury: global.testKeypairs.colossal.publicKey,
       })
       .signers([global.testKeypairs.colossal])
       .rpc()
@@ -39,7 +39,7 @@ describe("plege", () => {
       .createTier(new BN(1), "Test Tier", new BN(10), { month: {} })
       .accounts({
         app,
-        mint,
+        mint: global.mint,
         signer: global.testKeypairs.colossal.publicKey,
       })
       .signers([global.testKeypairs.colossal])
@@ -47,7 +47,7 @@ describe("plege", () => {
 
     const tierPDA = await global.program.account.tier.fetch(tier)
     expect(tierPDA.app.toBase58()).to.equal(app.toBase58())
-    expect(tierPDA.mint.toBase58()).to.equal(mint.toBase58())
+    expect(tierPDA.mint.toBase58()).to.equal(global.mint.toBase58())
     expect(tierPDA.price.toNumber()).to.equal(10)
     expect(tierPDA.interval.month !== undefined)
   })
@@ -85,7 +85,7 @@ describe("plege", () => {
       .accounts({
         app,
         tier,
-        owner: colossalAta,
+        destination: colossalAta,
         subscriberAta,
         subscription,
       })
@@ -143,71 +143,64 @@ describe("plege", () => {
     expect(subscriptionPDA.amountPaid.toNumber()).to.equal(0)
     expect(subscriptionPDA.active).to.equal(true)
   })
+
+  before(async () => {
+    ;[app] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("APP"),
+        global.testKeypairs.colossal.publicKey.toBuffer(),
+        new BN([1]).toArrayLike(Buffer, "be", 1),
+      ],
+      global.program.programId
+    )
+    ;[tier] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("SUBSCRIPTION_TIER"),
+        app.toBuffer(),
+        new BN([1]).toArrayLike(Buffer, "be", 1),
+      ],
+      global.program.programId
+    )
+    ;[subscription] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("SUBSCRIPTION"),
+        app.toBuffer(),
+        global.testKeypairs.subscriber.publicKey.toBuffer(),
+      ],
+      global.program.programId
+    )
+
+    colossalAta = await createAssociatedTokenAccount(
+      global.connection,
+      global.testKeypairs.colossal,
+      global.mint,
+      global.testKeypairs.colossal.publicKey
+    )
+
+    subscriberAta = await createAssociatedTokenAccount(
+      global.connection,
+      global.testKeypairs.subscriber,
+      global.mint,
+      global.testKeypairs.subscriber.publicKey
+    )
+
+    hackerAta = await createAssociatedTokenAccount(
+      global.connection,
+      global.testKeypairs.hacker,
+      global.mint,
+      global.testKeypairs.hacker.publicKey
+    )
+
+    await mintToChecked(
+      global.connection,
+      global.testKeypairs.colossal,
+      global.mint,
+      subscriberAta,
+      global.testKeypairs.colossal.publicKey,
+      1000 * 10 ** 5,
+      5
+    )
+  })
 })
 
-let mint, colossalAta, subscriberAta, hackerAta, app, tier, subscription
-before(async () => {
-  ;[app] = anchor.web3.PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("APP"),
-      global.testKeypairs.colossal.publicKey.toBuffer(),
-      new BN([1]).toArrayLike(Buffer, "be", 1),
-    ],
-    global.program.programId
-  )
-  ;[tier] = anchor.web3.PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("SUBSCRIPTION_TIER"),
-      app.toBuffer(),
-      new BN([1]).toArrayLike(Buffer, "be", 1),
-    ],
-    global.program.programId
-  )
-  ;[subscription] = anchor.web3.PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("SUBSCRIPTION"),
-      app.toBuffer(),
-      global.testKeypairs.subscriber.publicKey.toBuffer(),
-    ],
-    global.program.programId
-  )
-
-  mint = await createMint(
-    global.connection,
-    global.testKeypairs.colossal,
-    global.testKeypairs.colossal.publicKey,
-    global.testKeypairs.colossal.publicKey,
-    5
-  )
-
-  colossalAta = await createAssociatedTokenAccount(
-    global.connection,
-    global.testKeypairs.colossal,
-    mint,
-    global.testKeypairs.colossal.publicKey
-  )
-
-  subscriberAta = await createAssociatedTokenAccount(
-    global.connection,
-    global.testKeypairs.subscriber,
-    mint,
-    global.testKeypairs.subscriber.publicKey
-  )
-
-  hackerAta = await createAssociatedTokenAccount(
-    global.connection,
-    global.testKeypairs.hacker,
-    mint,
-    global.testKeypairs.hacker.publicKey
-  )
-
-  await mintToChecked(
-    global.connection,
-    global.testKeypairs.colossal,
-    mint,
-    subscriberAta,
-    global.testKeypairs.colossal.publicKey,
-    1000 * 10 ** 5,
-    5
-  )
-})
+let colossalAta, subscriberAta, hackerAta, app, tier, subscription

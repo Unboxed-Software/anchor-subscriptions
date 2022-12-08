@@ -42,4 +42,16 @@ pub mod plege {
     pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
         instructions::complete_payment(ctx)
     }
+
+    pub fn disallow_new_subscribers(ctx: Context<ToggleNewSubscribers>) -> Result<()> {
+        instructions::disallow_new_subscribers(ctx)
+    }
+
+    pub fn allow_new_subscribers(ctx: Context<ToggleNewSubscribers>) -> Result<()> {
+        instructions::allow_new_subscribers(ctx)
+    }
+
+    pub fn disable_tier(ctx: Context<ToggleNewSubscribers>) -> Result<()> {
+        instructions::disable_tier(ctx)
+    }
 }

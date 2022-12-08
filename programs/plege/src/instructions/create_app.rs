@@ -21,6 +21,8 @@ pub struct CreateApp<'info> {
         constraint = app_id == user_meta.num_apps + 1 @ PledgeError::InvalidAppId,
     )]
     pub user_meta: Account<'info, UserMeta>,
+    /// CHECK: Arbitrary treasury account chosen by app creator
+    pub treasury: UncheckedAccount<'info>,
     #[account(mut)]
     pub auth: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -28,11 +30,15 @@ pub struct CreateApp<'info> {
 
 pub fn create_app(ctx: Context<CreateApp>, _app_id: u8, name: String) -> Result<()> {
     let app = &mut ctx.accounts.app;
-    let auth = ctx.accounts.auth.to_account_info().key;
-    app.auth = *auth;
-    app.name = name;
+    let auth = &ctx.accounts.auth;
+    let treasury = &ctx.accounts.treasury;
+    let user_meta = &mut ctx.accounts.user_meta;
 
-    ctx.accounts.user_meta.num_apps += 1;
+    app.auth = *auth.to_account_info().key;
+    app.name = name;
+    app.treasury = *treasury.to_account_info().key;
+
+    user_meta.num_apps += 1;
 
     Ok(())
 }

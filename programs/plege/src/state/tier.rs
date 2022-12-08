@@ -8,6 +8,8 @@ pub struct Tier {
     pub mint: Pubkey,
     pub price: u64,
     pub interval: Interval,
+    pub accepting_new_subs: bool,
+    pub active: bool,
 }
 
 #[derive(Copy, Clone, BorshDeserialize, BorshSerialize)]
