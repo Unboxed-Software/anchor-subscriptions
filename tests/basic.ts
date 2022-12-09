@@ -22,6 +22,7 @@ describe("basic flow", () => {
     await global.program.methods
       .createApp(1, "Test App")
       .accounts({
+        mint: global.mint,
         auth: global.testKeypairs.colossal.publicKey,
         treasury: global.testKeypairs.colossal.publicKey,
       })
@@ -32,6 +33,7 @@ describe("basic flow", () => {
     expect(appPDA.auth.toBase58()).to.equal(
       global.testKeypairs.colossal.publicKey.toBase58()
     )
+    expect(appPDA.mint.toBase58()).to.equal(global.mint.toBase58())
   })
 
   it("create tier", async () => {
@@ -39,7 +41,6 @@ describe("basic flow", () => {
       .createTier(new BN(1), "Test Tier", new BN(10), { month: {} })
       .accounts({
         app,
-        mint: global.mint,
         signer: global.testKeypairs.colossal.publicKey,
       })
       .signers([global.testKeypairs.colossal])
@@ -47,7 +48,6 @@ describe("basic flow", () => {
 
     const tierPDA = await global.program.account.tier.fetch(tier)
     expect(tierPDA.app.toBase58()).to.equal(app.toBase58())
-    expect(tierPDA.mint.toBase58()).to.equal(global.mint.toBase58())
     expect(tierPDA.price.toNumber()).to.equal(10)
     expect(tierPDA.interval.month !== undefined)
   })
@@ -76,7 +76,7 @@ describe("basic flow", () => {
     const startTime = new Date(subscriptionPDA.start * 1000)
     expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
     expect(subscriptionPDA.start.toNumber()).to.equal(
-      subscriptionPDA.activeThrough.toNumber()
+      subscriptionPDA.payPeriodExpiration.toNumber()
     )
   })
 
@@ -100,9 +100,9 @@ describe("basic flow", () => {
 
     const ownerATA = await getAccount(global.connection, colossalAta)
 
-    let payPeriod = new Date(before.activeThrough.toNumber() * 1000)
+    let payPeriod = new Date(before.payPeriodExpiration.toNumber() * 1000)
     payPeriod.setMonth(payPeriod.getMonth() + 1)
-    expect(subscriptionPDA.activeThrough.toNumber() * 1000).to.equal(
+    expect(subscriptionPDA.payPeriodExpiration.toNumber() * 1000).to.equal(
       payPeriod.getTime()
     )
     expect(Number(ownerATA.amount)).to.equal(10)
@@ -148,7 +148,7 @@ describe("basic flow", () => {
     const startTime = new Date(subscriptionPDA.start * 1000)
     expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
     expect(subscriptionPDA.start.toNumber()).to.equal(
-      subscriptionPDA.activeThrough.toNumber()
+      subscriptionPDA.payPeriodExpiration.toNumber()
     )
   })
 

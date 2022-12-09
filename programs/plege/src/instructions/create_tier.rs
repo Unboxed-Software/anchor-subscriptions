@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 
 use crate::state::*;
 use crate::error::PlegeError;
@@ -19,7 +18,6 @@ pub struct CreateTier<'info> {
         constraint = tier_id == app.num_tiers + 1 @ PlegeError::InvalidTierId
     )]
     pub app: Account<'info, App>,
-    pub mint: Account<'info, Mint>,
     #[account(mut, 
         constraint = app.auth == signer.key(),
     )]
@@ -30,10 +28,8 @@ pub struct CreateTier<'info> {
 pub fn create_tier(ctx: Context<CreateTier>, _tier_id: u8, name: String, price: u64, interval: Interval) -> Result<()> {
     let tier = &mut ctx.accounts.tier;
     let app = &mut ctx.accounts.app;
-    let mint = ctx.accounts.mint.clone();
     tier.app = app.key();
     tier.name = name;
-    tier.mint = mint.key();
     tier.price = price;
     tier.interval = interval;
     tier.accepting_new_subs = true;

@@ -9,6 +9,10 @@ pub enum Interval {
 }
 
 impl Interval {
+    pub fn grace_period(self) -> i64 {
+        24 * 60 * 60
+    }
+
     pub fn max_approval_len(self) -> u64 {
         match self {
             Interval::Month => 60,

@@ -1,8 +1,7 @@
-import * as anchor from "@project-serum/anchor"
 import { createAssociatedTokenAccount, mintToChecked } from "@solana/spl-token"
 import { expect } from "chai"
 import {
-  createUserAppTier,
+  createGeneralScaffolding,
   subscriptionAccountKey,
 } from "./utils/basic-functions"
 import generateFundedKeypair from "./utils/keypair"
@@ -13,7 +12,7 @@ describe("tier functionality", () => {
       .createSubscription()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         subscriber: subscriber1.publicKey,
         subscriberAta: subscriber1Ata,
       })
@@ -24,7 +23,7 @@ describe("tier functionality", () => {
       .createSubscription()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         subscriber: subscriber2.publicKey,
         subscriberAta: subscriber2Ata,
       })
@@ -50,7 +49,7 @@ describe("tier functionality", () => {
       .disallowNewSubscribers()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         auth: auth.publicKey,
       })
       .signers([auth])
@@ -61,7 +60,7 @@ describe("tier functionality", () => {
         .createSubscription()
         .accounts({
           app,
-          tier,
+          tier: tier1,
           subscriber: subscriber2.publicKey,
           subscriberAta: subscriber2Ata,
         })
@@ -77,7 +76,7 @@ describe("tier functionality", () => {
       .disallowNewSubscribers()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         auth: auth.publicKey,
       })
       .signers([auth])
@@ -85,7 +84,7 @@ describe("tier functionality", () => {
 
     await global.program.methods
       .allowNewSubscribers()
-      .accounts({ app, tier, auth: auth.publicKey })
+      .accounts({ app, tier: tier1, auth: auth.publicKey })
       .signers([auth])
       .rpc()
 
@@ -93,7 +92,7 @@ describe("tier functionality", () => {
       .createSubscription()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         subscriber: subscriber1.publicKey,
         subscriberAta: subscriber1Ata,
       })
@@ -113,7 +112,7 @@ describe("tier functionality", () => {
       .disableTier()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         auth: auth.publicKey,
       })
       .signers([auth])
@@ -124,7 +123,7 @@ describe("tier functionality", () => {
         .createSubscription()
         .accounts({
           app,
-          tier,
+          tier: tier1,
           subscriber: subscriber2.publicKey,
           subscriberAta: subscriber2Ata,
         })
@@ -140,7 +139,7 @@ describe("tier functionality", () => {
       .createSubscription()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         subscriber: subscriber1.publicKey,
         subscriberAta: subscriber1Ata,
       })
@@ -153,7 +152,7 @@ describe("tier functionality", () => {
       .disableTier()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         auth: auth.publicKey,
       })
       .signers([auth])
@@ -171,7 +170,7 @@ describe("tier functionality", () => {
         .completePayment()
         .accounts({
           app,
-          tier,
+          tier: tier1,
           destination: destination,
           subscriberAta: subscriber1Ata,
           subscription: subscription1,
@@ -184,7 +183,7 @@ describe("tier functionality", () => {
 
   let user,
     app,
-    tier,
+    tier1,
     auth,
     subscriber1,
     subscriber1Ata,
@@ -192,7 +191,7 @@ describe("tier functionality", () => {
     subscriber2Ata
 
   beforeEach(async () => {
-    ;({ user, app, tier, auth } = await createUserAppTier())
+    ;({ user, app, tier1, auth } = await createGeneralScaffolding())
     let subscriber = await generateFundedKeypair(global.connection)
     subscriber1 = await generateFundedKeypair(global.connection)
     subscriber2 = await generateFundedKeypair(global.connection)
@@ -252,7 +251,7 @@ describe("tier functionality", () => {
       .createSubscription()
       .accounts({
         app,
-        tier,
+        tier: tier1,
         subscriber: subscriber.publicKey,
         subscriberAta: subscriberAta,
       })

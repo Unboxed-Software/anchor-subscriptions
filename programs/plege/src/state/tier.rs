@@ -5,7 +5,6 @@ use anchor_lang::prelude::*;
 pub struct Tier {
     pub app: Pubkey,
     pub name: String,
-    pub mint: Pubkey,
     pub price: u64,
     pub interval: Interval,
     pub accepting_new_subs: bool,

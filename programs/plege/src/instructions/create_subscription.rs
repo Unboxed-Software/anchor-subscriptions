@@ -5,7 +5,7 @@ use anchor_spl::token::{approve, Approve, Token, TokenAccount};
 #[derive(Accounts)]
 pub struct CreateSubscription<'info> {
     pub app: Account<'info, App>,
-    #[account(mut,
+    #[account(
         has_one = app,
         constraint = tier.active == true,
         constraint = tier.accepting_new_subs == true
@@ -21,7 +21,7 @@ pub struct CreateSubscription<'info> {
     #[account(mut)]
     pub subscriber: Signer<'info>,
     #[account(mut,
-            constraint = subscriber_ata.mint == tier.mint && subscriber_ata.owner == subscriber.key() && subscriber_ata.amount >= tier.price,
+            constraint = subscriber_ata.mint == app.mint && subscriber_ata.owner == subscriber.key() && subscriber_ata.amount >= tier.price,
         )]
     pub subscriber_ata: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
@@ -30,7 +30,7 @@ pub struct CreateSubscription<'info> {
 
 pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     let app = &mut ctx.accounts.app;
-    let tier = &mut ctx.accounts.tier;
+    let tier = &ctx.accounts.tier;
     let subscriber = &mut ctx.accounts.subscriber.to_account_info();
     let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
@@ -42,7 +42,11 @@ pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     subscription.subscriber = subscriber.clone().key();
     // subscription.expiration = Clock::get().unwrap().unix_timestamp + (tier.interval as i64);
     subscription.start = Clock::get().unwrap().unix_timestamp;
-    subscription.active_through = subscription.start;
+    subscription.pay_period_start = subscription.start;
+    subscription.pay_period_expiration = subscription.start;
+    subscription.last_payment_time = None;
+    subscription.accept_new_payments = true;
+    subscription.credits = 0;
     subscription.bump = *ctx.bumps.get("subscription").unwrap();
 
     // approve
