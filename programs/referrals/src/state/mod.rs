@@ -6,4 +6,6 @@ pub use referral::*;
 pub use referralship::*;
 pub use splits::*;
 
-pub const REFERRAL_AGENT: &str = "referral_agent";
+pub const REFERRAL_AGENT: &str = "REFERRAL_AGENT";
+pub const REFERRALSHIP: &str = "REFERRALSHIP";
+pub const APP: &str = "APP";

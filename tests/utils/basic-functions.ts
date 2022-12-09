@@ -1,18 +1,18 @@
-import { BN, web3 } from "@project-serum/anchor"
-import generateFundedKeypair from "./keypair"
+import { BN, web3 } from "@project-serum/anchor";
+import generateFundedKeypair from "./keypair";
 
 export function userAccountKeyFromPubkey(
-  pubkey: web3.PublicKey
+  pubkey: web3.PublicKey,
 ): web3.PublicKey {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("USER_META"), pubkey.toBuffer()],
-    global.program.programId
-  )[0]
+    global.program.programId,
+  )[0];
 }
 
 export function appAccountKey(
   auth: web3.PublicKey,
-  appId: number
+  appId: number,
 ): web3.PublicKey {
   return web3.PublicKey.findProgramAddressSync(
     [
@@ -20,13 +20,32 @@ export function appAccountKey(
       auth.toBuffer(),
       new BN(appId).toArrayLike(Buffer, "be", 1),
     ],
-    global.program.programId
-  )[0]
+    global.program.programId,
+  )[0];
+}
+
+export function findAppAddress(
+  auth: web3.PublicKey,
+  appId: number,
+  programId: web3.PublicKey,
+) {
+  return web3.PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("APP"),
+      auth.toBuffer(),
+      new BN(appId).toArrayLike(Buffer, "be", 1),
+    ],
+    programId,
+  );
+}
+
+export function numberToAppId(appId: number): Buffer {
+  return new BN(appId).toArrayLike(Buffer, "be", 1);
 }
 
 export function tierAccountKey(
   app: web3.PublicKey,
-  tierId: number
+  tierId: number,
 ): web3.PublicKey {
   return web3.PublicKey.findProgramAddressSync(
     [
@@ -34,25 +53,25 @@ export function tierAccountKey(
       app.toBuffer(),
       new BN(tierId).toArrayLike(Buffer, "be", 1),
     ],
-    global.program.programId
-  )[0]
+    global.program.programId,
+  )[0];
 }
 
 export function subscriptionAccountKey(
   subscriber: web3.PublicKey,
-  app: web3.PublicKey
+  app: web3.PublicKey,
 ): web3.PublicKey {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
-    global.program.programId
-  )[0]
+    global.program.programId,
+  )[0];
 }
 
 export async function createUserAppTier(): Promise<{ user; app; tier; auth }> {
-  const auth = await generateFundedKeypair(global.connection)
-  const user = userAccountKeyFromPubkey(auth.publicKey)
-  const app = appAccountKey(auth.publicKey, 1)
-  const tier = tierAccountKey(app, 1)
+  const auth = await generateFundedKeypair(global.connection);
+  const user = userAccountKeyFromPubkey(auth.publicKey);
+  const app = appAccountKey(auth.publicKey, 1);
+  const tier = tierAccountKey(app, 1);
 
   await global.program.methods
     .createUser()
@@ -60,7 +79,7 @@ export async function createUserAppTier(): Promise<{ user; app; tier; auth }> {
       auth: auth.publicKey,
     })
     .signers([auth])
-    .rpc()
+    .rpc();
 
   await global.program.methods
     .createApp(1, "Test App")
@@ -69,7 +88,7 @@ export async function createUserAppTier(): Promise<{ user; app; tier; auth }> {
       treasury: auth.publicKey,
     })
     .signers([auth])
-    .rpc()
+    .rpc();
 
   await global.program.methods
     .createTier(new BN(1), "Test Tier", new BN(10), { month: {} })
@@ -79,12 +98,12 @@ export async function createUserAppTier(): Promise<{ user; app; tier; auth }> {
       signer: auth.publicKey,
     })
     .signers([auth])
-    .rpc()
+    .rpc();
 
   return {
     auth,
     user,
     app,
     tier,
-  }
+  };
 }

@@ -2,13 +2,13 @@ use anchor_lang::prelude::*;
 
 use crate::error::ReferralError;
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Default)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Default, Debug)]
 pub struct AddressWithWeight {
     address: Pubkey,
     weight: u8,
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Default)]
 pub struct Splits8 {
     pub referral_agent: u8,
     pub slot_1: Option<AddressWithWeight>,

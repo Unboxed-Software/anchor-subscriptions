@@ -5,4 +5,7 @@ pub enum ReferralError {
     ReferralAgentSplitNotSet,
     TotalWeightIsNot100,
     InvalidAppAuthority,
+    TooManySplitsProvided,
+    InvalidCollectionMetadata,
+    CollectionMetadataMintMismatch,
 }
