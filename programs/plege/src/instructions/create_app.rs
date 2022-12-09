@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::error::PledgeError;
+use crate::error::PlegeError;
 use crate::state::*;
 
 #[derive(Accounts)]
@@ -18,7 +18,7 @@ pub struct CreateApp<'info> {
         seeds = ["USER_META".as_bytes(), auth.key().as_ref()],
         bump,
         has_one = auth,
-        constraint = app_id == user_meta.num_apps + 1 @ PledgeError::InvalidAppId,
+        constraint = app_id == user_meta.num_apps + 1 @ PlegeError::InvalidAppId,
     )]
     pub user_meta: Account<'info, UserMeta>,
     /// CHECK: Arbitrary treasury account chosen by app creator

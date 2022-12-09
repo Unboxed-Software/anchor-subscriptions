@@ -75,11 +75,14 @@ describe("basic flow", () => {
     )
     const startTime = new Date(subscriptionPDA.start * 1000)
     expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
-    expect(subscriptionPDA.amountPaid.toNumber()).to.equal(0)
-    expect(subscriptionPDA.active).to.equal(true)
+    expect(subscriptionPDA.start.toNumber()).to.equal(
+      subscriptionPDA.activeThrough.toNumber()
+    )
   })
 
   it("completes payment", async () => {
+    const before = await global.program.account.subscription.fetch(subscription)
+
     await global.program.methods
       .completePayment()
       .accounts({
@@ -97,7 +100,11 @@ describe("basic flow", () => {
 
     const ownerATA = await getAccount(global.connection, colossalAta)
 
-    expect(subscriptionPDA.amountPaid.toNumber()).to.equal(10)
+    let payPeriod = new Date(before.activeThrough.toNumber() * 1000)
+    payPeriod.setMonth(payPeriod.getMonth() + 1)
+    expect(subscriptionPDA.activeThrough.toNumber() * 1000).to.equal(
+      payPeriod.getTime()
+    )
     expect(Number(ownerATA.amount)).to.equal(10)
   })
 
@@ -140,8 +147,9 @@ describe("basic flow", () => {
     )
     const startTime = new Date(subscriptionPDA.start * 1000)
     expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
-    expect(subscriptionPDA.amountPaid.toNumber()).to.equal(0)
-    expect(subscriptionPDA.active).to.equal(true)
+    expect(subscriptionPDA.start.toNumber()).to.equal(
+      subscriptionPDA.activeThrough.toNumber()
+    )
   })
 
   before(async () => {
