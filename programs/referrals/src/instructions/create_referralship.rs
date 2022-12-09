@@ -30,6 +30,7 @@ pub struct CreateReferralship<'info> {
         bump,
     )]
     pub app: Account<'info, App>,
+    pub treasury_mint: Account<'info, Mint>,
     pub referral_agents_collection_nft_mint: Account<'info, Mint>,
     /// CHECK: we will manually deserialize and check this account
     pub referral_agents_collection_nft_metadata: UncheckedAccount<'info>,
@@ -47,10 +48,16 @@ pub fn create_referralship(
     splits: Vec<AddressWithWeight>,
 ) -> Result<()> {
     let app = &ctx.accounts.app;
+    let app_authority = &ctx.accounts.app_authority;
     let referralship = &mut ctx.accounts.referralship;
     let referral_agents_collection_nft_mint = &ctx.accounts.referral_agents_collection_nft_mint;
     let maybe_referral_agents_collection_nft_metadata =
         &ctx.accounts.referral_agents_collection_nft_metadata;
+    let treasury_mint = &ctx.accounts.treasury_mint;
+
+    if treasury_mint.key() == referral_agents_collection_nft_mint.key() {
+        return Err(ReferralError::InvalidTreasuryMint.into());
+    }
 
     if splits.len() > 7 {
         return Err(ReferralError::TooManySplitsProvided.into());
@@ -87,8 +94,7 @@ pub fn create_referralship(
         maybe_referral_agents_collection_nft_metadata
             .to_account_info()
             .borrow(),
-    )
-    .map_err(|_| ReferralError::InvalidCollectionMetadata)?;
+    )?;
 
     // make sure the mint account matches the mint in the metadata
     if collection_metadata.mint != referral_agents_collection_nft_mint.key() {
@@ -105,6 +111,7 @@ pub fn create_referralship(
     referralship.app_id = app_id;
     referralship.referral_agents_collection_nft_mint = referral_agents_collection_nft_mint.key();
     referralship.splits = splits;
+    referralship.treasury_mint = treasury_mint.key();
 
     Ok(())
 }

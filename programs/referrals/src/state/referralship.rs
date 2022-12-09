@@ -5,6 +5,7 @@ use anchor_lang::prelude::*;
 pub struct Referralship {
     pub app: Pubkey,
     pub app_id: u8,
+    pub treasury_mint: Pubkey,
     pub referral_agents_collection_nft_mint: Pubkey,
     pub splits: Splits8,
 }

@@ -45,7 +45,12 @@ describe("referrals", () => {
     const appAuthorityKeypair = await generateFundedKeypair(
       anchor.getProvider().connection,
     );
-
+    const referralAgentKeypair = await generateFundedKeypair(
+      anchor.getProvider().connection,
+    );
+    const subscriber = await generateFundedKeypair(
+      anchor.getProvider().connection,
+    );
     const treasuryAuthorityKeypair = await generateFundedKeypair(
       anchor.getProvider().connection,
     );
@@ -121,7 +126,7 @@ describe("referrals", () => {
     let referralAgentsCollectionNFT = await metaplex.nfts().create({
       name: "Referral Agents",
       uri: "https://example.com/nil",
-      symbol: "REFAG",
+      symbol: "REF_AG",
       sellerFeeBasisPoints: 0,
       isCollection: true,
       collectionAuthority: appAuthorityKeypair,
@@ -136,6 +141,7 @@ describe("referrals", () => {
         referralship: referralshipAddress,
         app: appAddress,
         appAuthority: appAuthorityKeypair.publicKey,
+        treasuryMint: treasuryMint,
         referralAgentsCollectionNftMint:
           referralAgentsCollectionNFT.mintAddress,
         referralAgentsCollectionNftMetadata:
