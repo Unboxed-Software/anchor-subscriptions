@@ -15,26 +15,47 @@ use plege::{
 
 use crate::{
     error::ReferralError,
-    state::{Referral, Referralship},
+    state::{Referral, Referralship, REFERRAL},
 };
 
 #[derive(Accounts)]
 pub struct SubscribeWithReferral<'info> {
-    pub referral: Account<'info, Referral>,
+    #[account(
+        init,
+        payer = subscriber,
+        space = 8 + 32 + 32 + 32 + 32,
+        seeds = [
+            REFERRAL.as_bytes(),
+            app.key().as_ref(),
+            subscription.key().as_ref(),
+            referral_agent_nft_mint.key().as_ref()
+        ],
+        bump
+    )]
+    pub referral: Box<Account<'info, Referral>>,
     pub referralship: Box<Account<'info, Referralship>>,
-    pub referral_agent_nft_mint: Account<'info, Mint>,
+    pub referral_agent_nft_mint: Box<Account<'info, Mint>>,
     /// CHECK: we will manually deserialize and check this account
     pub referral_agent_nft_metadata: UncheckedAccount<'info>,
-    pub referralship_collection_nft_mint: Account<'info, Mint>,
+    pub referralship_collection_nft_mint: Box<Account<'info, Mint>>,
     /// CHECK: we will manually deserialize and check this account
     pub referral_agents_collection_nft_metadata: UncheckedAccount<'info>,
-    pub treasury_mint: Account<'info, Mint>,
-    pub app: Account<'info, App>,
-    pub subscription: Account<'info, Subscription>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
+    pub app: Box<Account<'info, App>>,
+    /// CHECK: this account is uninitialized, and is initialized by the subscription program.
+    #[account(
+        mut,
+        seeds = ["SUBSCRIPTION".as_bytes(), app.key().as_ref(), subscriber.key().as_ref()],
+        seeds::program = plege_program.key(),
+        bump
+    )]
+    pub subscription: UncheckedAccount<'info>,
     // The subscriber needs to sign because they need to delegate tokens to the subscription program.
+    #[account(mut)]
     pub subscriber: Signer<'info>,
-    pub subscriber_token_account: Account<'info, TokenAccount>,
-    pub tier: Account<'info, Tier>,
+    #[account(mut)]
+    pub subscriber_token_account: Box<Account<'info, TokenAccount>>,
+    pub tier: Box<Account<'info, Tier>>,
     pub plege_program: Program<'info, Plege>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -139,10 +160,13 @@ pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()
 
     plege::cpi::create_subscription(create_subscription_context)?;
 
+    let sub = Subscription::try_from_slice(*subscription.to_account_info().try_borrow_data()?)?;
+    msg!("sub? {:#?}", sub);
     // set the referral account state
     referral.app = app.key();
     referral.referral_agent_nft_mint = referral_agent_nft_mint.key();
     referral.subscription = subscription.key();
 
+    msg!("referral? {:#?}", referral);
     Ok(())
 }

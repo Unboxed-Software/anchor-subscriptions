@@ -22,4 +22,4 @@ overflow-checks = true
 anchor-lang = "0.25.0"
 anchor-spl = "0.25.0"
 mpl-token-metadata = { version = "1.6.2", features = ["no-entrypoint"] }
-plege = { path = "../plege", features = ["no-entrypoint"] }
+plege = { path = "../plege", features = ["cpi"] }

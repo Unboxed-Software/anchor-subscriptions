@@ -10,6 +10,15 @@ export function userAccountKeyFromPubkey(
   )[0];
 }
 
+export function findUserMetaAddress(
+  pubkey: web3.PublicKey,
+) {
+  return web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("USER_META"), pubkey.toBuffer()],
+    global.program.programId,
+  );
+}
+
 export function appAccountKey(
   auth: web3.PublicKey,
   appId: number,
@@ -65,6 +74,16 @@ export function subscriptionAccountKey(
     [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
     global.program.programId,
   )[0];
+}
+
+export function findSubscriptionAddress(
+  subscriber: web3.PublicKey,
+  app: web3.PublicKey,
+) {
+  return web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
+    global.program.programId,
+  );
 }
 
 export async function createUserAppTier(): Promise<{ user; app; tier; auth }> {

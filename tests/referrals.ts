@@ -11,10 +11,17 @@ import { Plege } from "../target/types/plege";
 import generateFundedKeypair from "./utils/keypair";
 import {
   findAppAddress,
+  findSubscriptionAddress,
   numberToAppId,
+  tierAccountKey,
   userAccountKeyFromPubkey,
 } from "./utils/basic-functions";
-import { createAssociatedTokenAccount, createMint } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccount,
+  createMint,
+  mintTo,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import {
   keypairIdentity,
   Metaplex,
@@ -31,6 +38,20 @@ function findReferralshipAddress(
   ], programId);
 }
 
+function findReferralAddress(
+  app: PublicKey,
+  subscription: PublicKey,
+  referralAgentNFTMint: PublicKey,
+  programId: PublicKey,
+) {
+  return PublicKey.findProgramAddressSync([
+    Buffer.from("REFERRAL"),
+    app.toBuffer(),
+    subscription.toBuffer(),
+    referralAgentNFTMint.toBuffer(),
+  ], programId);
+}
+
 describe("referrals", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const referralProgram = anchor.workspace.Referrals as anchor.Program<
@@ -41,22 +62,16 @@ describe("referrals", () => {
   >;
 
   it("creates a referralship", async () => {
-    // create app authority
-    const appAuthorityKeypair = await generateFundedKeypair(
-      anchor.getProvider().connection,
-    );
-    const referralAgentKeypair = await generateFundedKeypair(
-      anchor.getProvider().connection,
-    );
-    const subscriber = await generateFundedKeypair(
-      anchor.getProvider().connection,
-    );
-    const treasuryAuthorityKeypair = await generateFundedKeypair(
-      anchor.getProvider().connection,
-    );
+    const { connection } = anchor.getProvider();
+    const appAuthorityKeypair = await generateFundedKeypair(connection);
+    const referralAgentKeypair = await generateFundedKeypair(connection);
+    const subscriberKeypair = await generateFundedKeypair(connection);
+    const stakeholder1Keypair = await generateFundedKeypair(connection);
+    const stakeholder2Keypair = await generateFundedKeypair(connection);
+    const treasuryAuthorityKeypair = await generateFundedKeypair(connection);
 
     // create a token mint
-    let treasuryMint = await createMint(
+    const treasuryMint = await createMint(
       anchor.getProvider().connection,
       treasuryAuthorityKeypair,
       treasuryAuthorityKeypair.publicKey,
@@ -64,18 +79,46 @@ describe("referrals", () => {
       0,
     );
 
-    let treasuryTokenAccount = await createAssociatedTokenAccount(
-      anchor.getProvider().connection,
+    const treasuryTokenAccount = await createAssociatedTokenAccount(
+      connection,
       treasuryAuthorityKeypair,
       treasuryMint,
       treasuryAuthorityKeypair.publicKey,
     );
 
+    const referralAgentTokenAccount = await createAssociatedTokenAccount(
+      connection,
+      referralAgentKeypair,
+      treasuryMint,
+      referralAgentKeypair.publicKey,
+    );
+
+    const subscriberTokenAccount = await createAssociatedTokenAccount(
+      connection,
+      subscriberKeypair,
+      treasuryMint,
+      subscriberKeypair.publicKey,
+    );
+
+    const stakeholder1TokenAccount = await createAssociatedTokenAccount(
+      connection,
+      stakeholder1Keypair,
+      treasuryMint,
+      stakeholder1Keypair.publicKey,
+    );
+
+    const stakeholder2TokenAccount = await createAssociatedTokenAccount(
+      connection,
+      stakeholder1Keypair,
+      treasuryMint,
+      stakeholder2Keypair.publicKey,
+    );
+
     const metaplex = Metaplex.make(anchor.getProvider().connection).use(
-      keypairIdentity(treasuryAuthorityKeypair),
+      keypairIdentity(appAuthorityKeypair),
     ).use(mockStorage());
 
-    let userMetaAddress = userAccountKeyFromPubkey(
+    const userMetaAddress = userAccountKeyFromPubkey(
       appAuthorityKeypair.publicKey,
     );
 
@@ -88,9 +131,8 @@ describe("referrals", () => {
       }).instruction();
 
     // create an app
-    let appId = 1;
-    let formattedAppId = numberToAppId(appId);
-    let [appAddress] = findAppAddress(
+    const appId = 1;
+    const [appAddress] = findAppAddress(
       appAuthorityKeypair.publicKey,
       appId,
       subscriptionProgram.programId,
@@ -98,7 +140,7 @@ describe("referrals", () => {
 
     const createAppIx = await subscriptionProgram.methods.createApp(
       appId,
-      "nil studios super app",
+      "super app",
     )
       .accounts(
         {
@@ -110,30 +152,62 @@ describe("referrals", () => {
         },
       ).instruction();
 
-    let createUserAndAppTx = new Transaction()
+    const tierArgs = {
+      name: "basic",
+      id: 1,
+      price: 100,
+      interval: { month: {} }, // monthly
+    };
+    const tierAddress = tierAccountKey(appAddress, 1);
+
+    const createTierIx = await subscriptionProgram.methods.createTier(
+      tierArgs.id,
+      tierArgs.name,
+      new anchor.BN(tierArgs.price),
+      tierArgs.interval,
+    )
+      .accounts({
+        tier: tierAddress,
+        app: appAddress,
+        mint: treasuryMint,
+        signer: appAuthorityKeypair.publicKey,
+        systemProgram: SystemProgram.programId,
+      }).instruction();
+
+    const createUserAndAppTx = new Transaction()
       .add(createUserMetaIx)
-      .add(createAppIx);
+      .add(createAppIx)
+      .add(createTierIx);
 
     await anchor.getProvider().sendAndConfirm(createUserAndAppTx, [
       appAuthorityKeypair,
     ], { skipPreflight: true });
 
-    let [referralshipAddress] = findReferralshipAddress(
+    const [referralshipAddress] = findReferralshipAddress(
       appAddress,
       referralProgram.programId,
     );
 
-    let referralAgentsCollectionNFT = await metaplex.nfts().create({
+    const referralAgentsCollectionNFT = await metaplex.nfts().create({
       name: "Referral Agents",
       uri: "https://example.com/nil",
-      symbol: "REF_AG",
+      symbol: "REF_AGENTS",
       sellerFeeBasisPoints: 0,
       isCollection: true,
       collectionAuthority: appAuthorityKeypair,
     });
 
+    const referralAgentNFT = await metaplex.nfts().create({
+      name: "Referral Agent",
+      uri: "https://example.com/nil/agent",
+      symbol: "REF_AGENT",
+      sellerFeeBasisPoints: 0,
+      collection: referralAgentsCollectionNFT.mintAddress,
+      collectionAuthority: appAuthorityKeypair,
+    });
+
     // create a referralship account
-    let createReferralshipIx = await referralProgram.methods
+    const createReferralshipIx = await referralProgram.methods
       .createReferralship(appId, 90, [{
         address: Keypair.generate().publicKey,
         weight: 10,
@@ -150,16 +224,107 @@ describe("referrals", () => {
         systemProgram: SystemProgram.programId,
       }).instruction();
 
-    let createReferralshipTx = new Transaction().add(createReferralshipIx);
+    const createReferralshipTx = new Transaction().add(createReferralshipIx);
 
     await anchor.getProvider().sendAndConfirm(createReferralshipTx, [
       appAuthorityKeypair,
     ], { skipPreflight: true });
 
-    let referralship = await referralProgram.account.referralship.fetch(
+    const referralship = await referralProgram.account.referralship.fetch(
       referralshipAddress,
     );
 
-    console.log(referralship);
+    assert.equal(referralship.appId, appId);
+    assert.equal(referralship.app.toBase58(), appAddress.toBase58());
+    assert.equal(referralship.treasuryMint.toBase58(), treasuryMint.toBase58());
+
+    const [subscriptionAddress] = findSubscriptionAddress(
+      subscriberKeypair.publicKey,
+      appAddress,
+    );
+
+    const [referralAddress] = findReferralAddress(
+      appAddress,
+      subscriptionAddress,
+      referralAgentNFT.mintAddress,
+      referralProgram.programId,
+    );
+
+    const ixAccounts = {
+      referral: referralAddress,
+      referralship: referralshipAddress,
+      subscription: subscriptionAddress,
+      subscriber: subscriberKeypair.publicKey,
+      app: appAddress,
+      treasuryMint: treasuryMint,
+      referralAgentNftMint: referralAgentNFT.mintAddress,
+      referralAgentNftMetadata: referralAgentNFT.metadataAddress,
+      referralAgentsCollectionNftMetadata:
+        referralAgentsCollectionNFT.metadataAddress,
+      referralshipCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
+      subscriberTokenAccount,
+      tier: tierAddress,
+      plegeProgram: subscriptionProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    };
+
+    for (let key in ixAccounts) {
+      console.log(key, ixAccounts[key].toBase58());
+    }
+
+    await mintTo(
+      connection,
+      subscriberKeypair,
+      treasuryMint,
+      subscriberTokenAccount,
+      treasuryAuthorityKeypair,
+      100,
+    );
+
+    const subscribeWithReferralIx = await referralProgram.methods
+      .subscribeWithReferral().accounts({
+        referral: referralAddress,
+        referralship: referralshipAddress,
+        subscription: subscriptionAddress,
+        subscriber: subscriberKeypair.publicKey,
+        app: appAddress,
+        treasuryMint: treasuryMint,
+        referralAgentNftMint: referralAgentNFT.mintAddress,
+        referralAgentNftMetadata: referralAgentNFT.metadataAddress,
+        referralAgentsCollectionNftMetadata:
+          referralAgentsCollectionNFT.metadataAddress,
+        referralshipCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
+        subscriberTokenAccount,
+        tier: tierAddress,
+        plegeProgram: subscriptionProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      }).instruction();
+
+    const subscribeWithReferralTx = new Transaction().add(
+      subscribeWithReferralIx,
+    );
+
+    anchor.getProvider().sendAndConfirm(subscribeWithReferralTx, [
+      subscriberKeypair,
+    ], { skipPreflight: true });
+
+    let referralshipAfter = await referralProgram.account.referralship.fetch(
+      referralshipAddress,
+    );
+
+    let subscription = await subscriptionProgram.account.subscription
+      .fetchNullable(
+        subscriptionAddress,
+      );
+    let referral = await referralProgram.account.referral.fetchNullable(
+      referralAddress,
+    );
+    let app = await subscriptionProgram.account.app.fetchNullable(appAddress);
+    console.log(referral);
+    console.log(subscription);
+    console.log(referralshipAfter);
+    console.log(app);
   });
 });
