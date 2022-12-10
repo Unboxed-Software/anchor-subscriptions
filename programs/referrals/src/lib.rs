@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::{AddressWithWeight, Splits8};
 
-declare_id!("DWPZARiryrryvhsmvvkV18pzCafD69ZjpGkhnEGwbSgt");
+declare_id!("2kY5DJedxxDkGXohsSQh5kLNz4bpjEZ2YGVSrsgNQdG1");
 
 #[program]
 pub mod referrals {

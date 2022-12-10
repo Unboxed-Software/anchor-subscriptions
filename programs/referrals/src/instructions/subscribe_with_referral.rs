@@ -23,7 +23,7 @@ pub struct SubscribeWithReferral<'info> {
     #[account(
         init,
         payer = subscriber,
-        space = 8 + 32 + 32 + 32 + 32,
+        space = 8 + 32 + 32 + 32, 
         seeds = [
             REFERRAL.as_bytes(),
             app.key().as_ref(),
@@ -160,13 +160,10 @@ pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()
 
     plege::cpi::create_subscription(create_subscription_context)?;
 
-    let sub = Subscription::try_from_slice(*subscription.to_account_info().try_borrow_data()?)?;
-    msg!("sub? {:#?}", sub);
     // set the referral account state
     referral.app = app.key();
     referral.referral_agent_nft_mint = referral_agent_nft_mint.key();
     referral.subscription = subscription.key();
 
-    msg!("referral? {:#?}", referral);
     Ok(())
 }

@@ -241,6 +241,7 @@ describe("referrals", () => {
     const [subscriptionAddress] = findSubscriptionAddress(
       subscriberKeypair.publicKey,
       appAddress,
+      subscriptionProgram.programId,
     );
 
     const [referralAddress] = findReferralAddress(
@@ -306,7 +307,7 @@ describe("referrals", () => {
       subscribeWithReferralIx,
     );
 
-    anchor.getProvider().sendAndConfirm(subscribeWithReferralTx, [
+    await anchor.getProvider().sendAndConfirm(subscribeWithReferralTx, [
       subscriberKeypair,
     ], { skipPreflight: true });
 

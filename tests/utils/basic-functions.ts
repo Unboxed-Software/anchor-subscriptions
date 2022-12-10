@@ -79,10 +79,11 @@ export function subscriptionAccountKey(
 export function findSubscriptionAddress(
   subscriber: web3.PublicKey,
   app: web3.PublicKey,
+  programId: web3.PublicKey,
 ) {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
-    global.program.programId,
+    programId,
   );
 }
 

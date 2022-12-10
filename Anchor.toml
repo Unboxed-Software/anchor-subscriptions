@@ -3,8 +3,8 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-plege = "CdEWFt6UP8LGX878nQA5qH2GUoEaHmae7RSnDWxVMww8"
-referrals = 'DWPZARiryrryvhsmvvkV18pzCafD69ZjpGkhnEGwbSgt'
+plege = "3xRXzaS1gJ8jvh5jjsXqyhn7tE1qrEet9wNSYqPfgtAH"
+referrals = "2kY5DJedxxDkGXohsSQh5kLNz4bpjEZ2YGVSrsgNQdG1"
 
 [registry]
 url = "https://api.apr.dev"
