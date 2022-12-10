@@ -1,6 +1,6 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, collections::HashSet};
 
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::program_pack::Pack};
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use mpl_token_metadata::{
     assertions::assert_owned_by,
@@ -62,7 +62,7 @@ pub struct SplitPayment<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn split_payment(ctx: Context<SplitPayment>) -> Result<()> {
+pub fn split_payment<'info>(ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>) -> Result<()> {
     let app = &ctx.accounts.app;
     let subscription = &ctx.accounts.subscription;
     let tier = &ctx.accounts.tier;
@@ -141,10 +141,6 @@ pub fn split_payment(ctx: Context<SplitPayment>) -> Result<()> {
         return Err(ReferralError::InvalidReferralAgentTreasuryTokenAccount.into());
     }
 
-    // let hm = referralship.splits.as_hashmap();
-
-    // msg!("hm: {:?}", hm);
-
     // calculate the referral agent's split amount
     let referral_agent_claim_amount =
         Splits8::calculate_amount(referralship.splits.referral_agent, tier.price);
@@ -158,14 +154,53 @@ pub fn split_payment(ctx: Context<SplitPayment>) -> Result<()> {
 
     let transfer_context = CpiContext::new(token_program.to_account_info(), transfer_accounts);
     token::transfer(transfer_context, referral_agent_claim_amount)?;
+
+    let splits = referralship.splits.as_hashmap();
+
+    // get the account infos here because we can't get them inside the loop,
+    // or our references will be invalidated
+    let token_program_account_info = token_program.to_account_info().clone();
+
     // for each split in the referralship's splits:
-    //    get the next account from ctx.remaining_accounts
-    //    make sure the next account is a token account
-    //    make sure the next account's mint matches the treasury mint
-    //    calculate their split amount
-    //    transfer the split amount to their token account
-    //    TODO: emit an event for each split
-    //    TODO: create a new SplitReceipt account.
+    let mut visited = HashSet::new();
+
+    for token_account_info in ctx.remaining_accounts {
+        if visited.contains(&token_account_info.key()) {
+            return Err(ReferralError::DuplicateSplit.into());
+        }
+
+        // make sure it's present in the splits hashmap
+        let weight = splits
+            .get(&token_account_info.key())
+            .ok_or(ReferralError::InvalidSplit)?;
+
+        // make sure it's owned by the token program
+        assert_owned_by(token_account_info, &token_program.key())?;
+
+        // make sure it can be deserialized into an token Account
+        let token_account =
+            token::spl_token::state::Account::unpack(&token_account_info.try_borrow_data()?)?;
+
+        // make sure the next account's mint matches the treasury mint
+        if token_account.mint.key() != treasury_mint.key() {
+            return Err(ReferralError::InvalidSplitRecipientTreasuryTokenAccount.into());
+        }
+
+        // calculate their split amount
+        let split_recipient_claim_amount = Splits8::calculate_amount(*weight, tier.price);
+
+        // transfer the split amount to their token account
+        let transfer_accounts = Transfer {
+            from: treasury_token_account.to_account_info(),
+            to: token_account_info.clone(),
+            authority: treasury_authority.to_account_info(),
+        };
+        let transfer_context =
+            CpiContext::new(token_program_account_info.clone(), transfer_accounts);
+
+        token::transfer(transfer_context, split_recipient_claim_amount)?;
+        visited.insert(token_account_info.key());
+    }
 
     Ok(())
 }

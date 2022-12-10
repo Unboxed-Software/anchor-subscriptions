@@ -26,7 +26,9 @@ pub mod referrals {
         instructions::subscribe_with_referral(ctx)
     }
 
-    pub fn split_payment(ctx: Context<SplitPayment>) -> Result<()> {
+    pub fn split_payment<'info>(
+        ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>,
+    ) -> Result<()> {
         instructions::split_payment(ctx)
     }
 }

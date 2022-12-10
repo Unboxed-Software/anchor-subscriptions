@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import {
+  AccountMeta,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -209,10 +210,10 @@ describe("referrals", () => {
 
     // create a referralship account
     const createReferralshipIx = await referralProgram.methods
-      .createReferralship(appId, 90, [{
-        address: Keypair.generate().publicKey,
-        weight: 10,
-      }]).accounts({
+      .createReferralship(appId, 80, [
+        { address: stakeholder1TokenAccount, weight: 10 },
+        { address: stakeholder2TokenAccount, weight: 10 },
+      ]).accounts({
         referralship: referralshipAddress,
         app: appAddress,
         appAuthority: appAuthorityKeypair.publicKey,
@@ -345,6 +346,18 @@ describe("referrals", () => {
       treasuryAuthority: treasuryAuthorityKeypair.publicKey,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
+      .remainingAccounts([
+        {
+          pubkey: stakeholder1TokenAccount,
+          isWritable: true,
+          isSigner: false,
+        },
+        {
+          pubkey: stakeholder2TokenAccount,
+          isWritable: true,
+          isSigner: false,
+        },
+      ])
       .instruction();
 
     let splitTx = new Transaction().add(splitIx);
