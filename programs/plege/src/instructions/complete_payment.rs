@@ -17,11 +17,11 @@ pub struct CompletePayment<'info> {
     )]
     pub tier: Account<'info, Tier>,
     #[account(mut,
-        constraint = {msg!("destination"); destination.owner == app.treasury.key() && destination.mint == tier.mint},
+        constraint = {msg!("destination"); destination.owner == app.treasury.key() && destination.mint == app.mint},
     )]
     pub destination: Account<'info, TokenAccount>,
     #[account(mut, constraint = {msg!("subscriber_ata"); subscriber_ata.owner == subscription.subscriber.key()
-        && subscriber_ata.mint == tier.mint && subscriber_ata.amount >= tier.price},
+        && subscriber_ata.mint == app.mint && subscriber_ata.amount >= tier.price},
     )]
     pub subscriber_ata: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
@@ -38,32 +38,40 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
 
     let now_timestamp = Clock::get().unwrap().unix_timestamp;
 
-    let last_pay_period: i64 = subscription.active_through;
+    let last_pay_period: i64 = subscription.pay_period_expiration;
 
-    require!(now_timestamp - last_pay_period < 60 * 60 * 24, PlegeError::MissedPayment);
+    require!(tier.interval.grace_period() > now_timestamp - last_pay_period, PlegeError::MissedPayment);
+    require!(subscription.accept_new_payments, PlegeError::InactiveSubscription);
 
-    let balance = tier.price;
+    let balance = tier.price - subscription.credits;
 
     msg!("balance is {:?}", balance);
-    let transfer_accounts = Transfer {  
-        from: subscriber_ata.clone(),
-        to: destination.clone(),
-        authority: subscription.to_account_info().clone(),
-    };
-    
-    let app_key = app.key();
-    let subscriber_key = subscription.subscriber;
-    let subscription_bump = subscription.bump;
-    let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
-    let signers = [&seeds[..]];
-    let transfer_amount = balance;
 
-    let transfer_ctx =
-            CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
+    if balance > 0 {
+        let transfer_accounts = Transfer {  
+            from: subscriber_ata.clone(),
+            to: destination.clone(),
+            authority: subscription.to_account_info().clone(),
+        };
 
-    transfer(transfer_ctx, transfer_amount)?;
+        let app_key = app.key();
+        let subscriber_key = subscription.subscriber;
+        let subscription_bump = subscription.bump;
+        let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
+        let signers = [&seeds[..]];
+        let transfer_amount = balance;
 
-    subscription.active_through = tier.interval.increment(last_pay_period);
+        let transfer_ctx =
+                CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
+
+        transfer(transfer_ctx, transfer_amount)?;
+    } else {
+        subscription.credits -= tier.price;
+    }
+
+    subscription.last_payment_time = Some(now_timestamp);
+    subscription.pay_period_start = subscription.pay_period_expiration;
+    subscription.pay_period_expiration = tier.interval.increment(last_pay_period);
 
     Ok(())
 }

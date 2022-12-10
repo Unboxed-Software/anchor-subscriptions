@@ -8,4 +8,6 @@ pub enum PlegeError {
     InvalidTierId,
     #[msg("Payment interval skipped")]
     MissedPayment,
+    InactiveSubscription,
+    SubscriptionNotExpired,
 }

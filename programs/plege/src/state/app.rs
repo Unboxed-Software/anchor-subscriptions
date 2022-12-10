@@ -6,4 +6,5 @@ pub struct App {
     pub name: String,
     pub num_tiers: u8,
     pub treasury: Pubkey,
+    pub mint: Pubkey,
 }

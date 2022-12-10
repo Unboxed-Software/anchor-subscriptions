@@ -54,4 +54,8 @@ pub mod plege {
     pub fn disable_tier(ctx: Context<ToggleNewSubscribers>) -> Result<()> {
         instructions::disable_tier(ctx)
     }
+
+    pub fn switch_subscription_tier(ctx: Context<SwitchSubscriptionTier>) -> Result<()> {
+        instructions::switch_subscription_tier(ctx)
+    }
 }
