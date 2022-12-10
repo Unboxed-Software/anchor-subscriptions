@@ -7,7 +7,7 @@ pub mod state;
 use instructions::*;
 use state::Interval;
 
-declare_id!("CoQBfJd641bD85WYv6g2vXZvD6ae43b63VyQ1DBeXgAs");
+declare_id!("2KiKoVaRF894axqfgEbuQhgHmNWbMY1fgC1NBEqQNu4c");
 
 #[program]
 pub mod plege {
