@@ -155,7 +155,7 @@ describe("referrals", () => {
     const tierArgs = {
       name: "basic",
       id: 1,
-      price: 100,
+      price: 102,
       interval: { month: {} }, // monthly
     };
     const tierAddress = tierAccountKey(appAddress, 1);
@@ -204,6 +204,7 @@ describe("referrals", () => {
       sellerFeeBasisPoints: 0,
       collection: referralAgentsCollectionNFT.mintAddress,
       collectionAuthority: appAuthorityKeypair,
+      tokenOwner: referralAgentKeypair.publicKey,
     });
 
     // create a referralship account
@@ -251,28 +252,8 @@ describe("referrals", () => {
       referralProgram.programId,
     );
 
-    const ixAccounts = {
-      referral: referralAddress,
-      referralship: referralshipAddress,
-      subscription: subscriptionAddress,
-      subscriber: subscriberKeypair.publicKey,
-      app: appAddress,
-      treasuryMint: treasuryMint,
-      referralAgentNftMint: referralAgentNFT.mintAddress,
-      referralAgentNftMetadata: referralAgentNFT.metadataAddress,
-      referralAgentsCollectionNftMetadata:
-        referralAgentsCollectionNFT.metadataAddress,
-      referralshipCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
-      subscriberTokenAccount,
-      tier: tierAddress,
-      plegeProgram: subscriptionProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-    };
-
-    for (let key in ixAccounts) {
-      console.log(key, ixAccounts[key].toBase58());
-    }
+    let treasuryInitialBalance = 100_000_000;
+    let subscriberInitialBalance = 100_000_000;
 
     await mintTo(
       connection,
@@ -280,7 +261,16 @@ describe("referrals", () => {
       treasuryMint,
       subscriberTokenAccount,
       treasuryAuthorityKeypair,
-      100,
+      subscriberInitialBalance,
+    );
+
+    await mintTo(
+      connection,
+      treasuryAuthorityKeypair,
+      treasuryMint,
+      treasuryTokenAccount,
+      treasuryAuthorityKeypair,
+      treasuryInitialBalance,
     );
 
     const subscribeWithReferralIx = await referralProgram.methods
@@ -311,21 +301,57 @@ describe("referrals", () => {
       subscriberKeypair,
     ], { skipPreflight: true });
 
-    let referralshipAfter = await referralProgram.account.referralship.fetch(
-      referralshipAddress,
-    );
+    let ixAccounts = {
+      app: appAddress,
+      subscription: subscriptionAddress,
+      tier: tierAddress,
+      subscriber: subscriberKeypair.publicKey,
+      referral: referralAddress,
+      referralship: referralshipAddress,
+      referralAgentNftMint: referralAgentNFT.mintAddress,
+      referralAgentNftMetadata: referralAgentNFT.metadataAddress,
+      referralAgentNftTokenAccount: referralAgentNFT.tokenAddress,
+      referralAgentTreasuryTokenAccount: referralAgentTokenAccount,
+      referralAgentsCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
+      referralAgentsCollectionNftMetadata:
+        referralAgentsCollectionNFT.metadataAddress,
+      treasuryMint: treasuryMint,
+      treasuryTokenAccount: treasuryTokenAccount,
+      treasuryAuthority: treasuryAuthorityKeypair.publicKey,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    };
 
-    let subscription = await subscriptionProgram.account.subscription
-      .fetchNullable(
-        subscriptionAddress,
-      );
-    let referral = await referralProgram.account.referral.fetchNullable(
-      referralAddress,
-    );
-    let app = await subscriptionProgram.account.app.fetchNullable(appAddress);
-    console.log(referral);
-    console.log(subscription);
-    console.log(referralshipAfter);
-    console.log(app);
+    for (let account in ixAccounts) {
+      console.log(account, ixAccounts[account].toBase58());
+    }
+
+    // simulate a call from the subscription program to split payments
+    let splitIx = await referralProgram.methods.splitPayment().accounts({
+      app: appAddress,
+      subscription: subscriptionAddress,
+      tier: tierAddress,
+      subscriber: subscriberKeypair.publicKey,
+      referral: referralAddress,
+      referralship: referralshipAddress,
+      referralAgentNftMint: referralAgentNFT.mintAddress,
+      referralAgentNftMetadata: referralAgentNFT.metadataAddress,
+      referralAgentNftTokenAccount: referralAgentNFT.tokenAddress,
+      referralAgentTreasuryTokenAccount: referralAgentTokenAccount,
+      referralAgentsCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
+      referralAgentsCollectionNftMetadata:
+        referralAgentsCollectionNFT.metadataAddress,
+      treasuryMint: treasuryMint,
+      treasuryTokenAccount: treasuryTokenAccount,
+      treasuryAuthority: treasuryAuthorityKeypair.publicKey,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+      .instruction();
+
+    let splitTx = new Transaction().add(splitIx);
+    await anchor.getProvider().sendAndConfirm(splitTx, [
+      treasuryAuthorityKeypair,
+    ], {
+      skipPreflight: true,
+    });
   });
 });

@@ -1,4 +1,4 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, collections::HashSet};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -9,8 +9,9 @@ use mpl_token_metadata::{
 use plege::{program::Plege, state::App};
 
 use crate::{
+    assertions::assert_unique_split,
     error::ReferralError,
-    state::{AddressWithWeight, Referralship, Splits8, APP, REFERRALSHIP},
+    state::{PubkeyWithWeight, Referralship, Splits8, APP, REFERRALSHIP},
 };
 
 #[derive(Accounts)]
@@ -45,10 +46,9 @@ pub fn create_referralship(
     ctx: Context<CreateReferralship>,
     app_id: u8,
     referral_agent_split: u8,
-    splits: Vec<AddressWithWeight>,
+    splits: Vec<PubkeyWithWeight>,
 ) -> Result<()> {
     let app = &ctx.accounts.app;
-    let app_authority = &ctx.accounts.app_authority;
     let referralship = &mut ctx.accounts.referralship;
     let referral_agents_collection_nft_mint = &ctx.accounts.referral_agents_collection_nft_mint;
     let maybe_referral_agents_collection_nft_metadata =
@@ -67,19 +67,26 @@ pub fn create_referralship(
 
     // iterate over the addresses provided as splits, if there are fewer than 7, fill the rest with
     // None.
-    let splits = Splits8 {
-        referral_agent: referral_agent_split,
-        slot_1: splits_iter.next(),
-        slot_2: splits_iter.next(),
-        slot_3: splits_iter.next(),
-        slot_4: splits_iter.next(),
-        slot_5: splits_iter.next(),
-        slot_6: splits_iter.next(),
-        slot_7: splits_iter.next(),
-    };
 
-    // make sure the splits add up to 100
-    splits.validate_weights()?;
+    // entering a local scope so we can drop the hashset after we're done with it.
+    let splits = {
+        let mut visited = HashSet::new();
+
+        let tmp = Splits8 {
+            referral_agent: referral_agent_split,
+            slot_1: assert_unique_split(splits_iter.next(), &mut visited)?,
+            slot_2: assert_unique_split(splits_iter.next(), &mut visited)?,
+            slot_3: assert_unique_split(splits_iter.next(), &mut visited)?,
+            slot_4: assert_unique_split(splits_iter.next(), &mut visited)?,
+            slot_5: assert_unique_split(splits_iter.next(), &mut visited)?,
+            slot_6: assert_unique_split(splits_iter.next(), &mut visited)?,
+            slot_7: assert_unique_split(splits_iter.next(), &mut visited)?,
+        };
+
+        // make sure the splits add up to 100
+        tmp.validate_weights()?;
+        tmp
+    };
 
     // make sure the metadata belongs to the metaplex token metadata program;
     assert_owned_by(

@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum ReferralError {
     InvalidAppAuthority,
     InvalidTreasuryMint,
+    InvalidSubscriberTokenAccount,
+    InvalidTier,
     ReferralAgentSplitNotSet,
     TooManySplitsProvided,
     TotalWeightIsNot100,
@@ -11,7 +13,10 @@ pub enum ReferralError {
     InvalidCollectionMetadata,
     CollectionMetadataMintMismatch,
     InvalidReferralAgentMetadata,
+    InvalidReferralAgentNftTokenAccount,
+    InvalidReferralAgentTreasuryTokenAccount,
     ReferralAgentNFTMintMismatch,
-    InvalidSubscriberTokenAccount,
-    InvalidTier,
+    InvalidSplitRecipientTreasuryTokenAccount,
+    InvalidSplit,
+    DuplicateSplit,
 }

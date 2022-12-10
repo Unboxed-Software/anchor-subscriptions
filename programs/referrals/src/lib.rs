@@ -1,10 +1,11 @@
+mod assertions;
 mod error;
 mod instructions;
 mod state;
 
 use anchor_lang::prelude::*;
 use instructions::*;
-use state::{AddressWithWeight, Splits8};
+use state::{PubkeyWithWeight, Splits8};
 
 declare_id!("2kY5DJedxxDkGXohsSQh5kLNz4bpjEZ2YGVSrsgNQdG1");
 
@@ -16,7 +17,7 @@ pub mod referrals {
         ctx: Context<CreateReferralship>,
         app_id: u8,
         referral_agent_split: u8,
-        splits: Vec<AddressWithWeight>,
+        splits: Vec<PubkeyWithWeight>,
     ) -> Result<()> {
         instructions::create_referralship(ctx, app_id, referral_agent_split, splits)
     }
