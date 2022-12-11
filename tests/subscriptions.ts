@@ -1,8 +1,6 @@
 import {
   createAssociatedTokenAccount,
-  createAssociatedTokenAccountInstruction,
   getAccount,
-  getAssociatedTokenAddress,
   mintToChecked,
 } from "@solana/spl-token"
 import chaiAsPromised from "chai-as-promised"
@@ -38,6 +36,8 @@ describe("subscription functionality", () => {
           app,
           subscriber: subscriber1.publicKey,
           subscriberAta: subscriber1Ata,
+          subscriptionThread: subscriptionThread,
+          threadProgram: THREAD_PROGRAM,
         })
         .signers([subscriber1])
         .rpc()
@@ -45,7 +45,7 @@ describe("subscription functionality", () => {
   })
 
   it("subscriber can switch tier after paying", async () => {
-    const { subscription } = await createSubscription(
+    const { subscription, subscriptionThread } = await createSubscription(
       app,
       tier1,
       subscriber1,
@@ -69,6 +69,8 @@ describe("subscription functionality", () => {
         app,
         subscriber: subscriber1.publicKey,
         subscriberAta: subscriber1Ata,
+        subscriptionThread: subscriptionThread,
+        threadProgram: THREAD_PROGRAM,
       })
       .signers([subscriber1])
       .rpc()
@@ -102,6 +104,8 @@ describe("subscription functionality", () => {
         app,
         subscriber: subscriber1.publicKey,
         subscriberAta: subscriber1Ata,
+        subscriptionThread: subscriptionThread,
+        threadProgram: THREAD_PROGRAM,
       })
       .signers([subscriber1])
       .rpc()
@@ -112,36 +116,24 @@ describe("subscription functionality", () => {
     expect(Number(destinationAta.amount)).to.equal(10)
   })
 
-  it.only("subscription can be closed if inactive", async () => {
+  it("subscription can be closed if inactive", async () => {
     let subscription, subscriptionThread, subscriptionBump
-    try {
-      ;({ subscription, subscriptionThread, subscriptionBump } =
-        await createSubscription(app, tier1, subscriber1, subscriber1Ata))
-    } catch (error) {
-      console.log("error on 1:", error)
-    }
+    ;({ subscription, subscriptionThread, subscriptionBump } =
+      await createSubscription(app, tier1, subscriber1, subscriber1Ata))
 
-    try {
-      await cancelSubscription(app, tier1, subscriber1, subscriber1Ata)
-    } catch (error) {
-      console.log("error on 2:", error)
-    }
+    await cancelSubscription(app, tier1, subscriber1, subscriber1Ata)
 
-    try {
-      await global.program.methods
-        .closeSubscriptionAccount(subscriptionBump)
-        .accounts({
-          app,
-          subscription,
-          subscriber: subscriber1.publicKey,
-          subscriptionThread,
-          threadProgram: THREAD_PROGRAM,
-        })
-        .signers([subscriber1])
-        .rpc()
-    } catch (error) {
-      console.log("error on 3", error)
-    }
+    await global.program.methods
+      .closeSubscriptionAccount(subscriptionBump)
+      .accounts({
+        app,
+        subscription,
+        subscriber: subscriber1.publicKey,
+        subscriptionThread,
+        threadProgram: THREAD_PROGRAM,
+      })
+      .signers([subscriber1])
+      .rpc()
   })
 
   let user,
@@ -155,9 +147,7 @@ describe("subscription functionality", () => {
     subscriber2Ata
 
   beforeEach(async () => {
-    await new Promise((x) => setTimeout(x, 4000))
-    ;({ user, app, tier1, auth } = await createGeneralScaffolding())
-    await new Promise((x) => setTimeout(x, 2000))
+    ;({ user, app, tier1, tier2, auth } = await createGeneralScaffolding())
     let subscriber = await generateFundedKeypair(global.connection)
     subscriber1 = await generateFundedKeypair(global.connection)
     subscriber2 = await generateFundedKeypair(global.connection)

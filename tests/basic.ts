@@ -112,8 +112,10 @@ describe("basic flow", () => {
       subscriberAta
     )
 
-    const subscriptionPDA = await global.connection.getAccountInfo(subscription)
-    expect(subscriptionPDA).to.equal(null)
+    const subscriptionPDA = await global.program.account.subscription.fetch(
+      subscription
+    )
+    expect(subscriptionPDA.acceptNewPayments).to.equal(false)
   })
 
   it("attempting to create subscription again fails", async () => {

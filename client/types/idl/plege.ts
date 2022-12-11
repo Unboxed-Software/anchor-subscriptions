@@ -544,6 +544,16 @@ export type Plege = {
           "isSigner": false
         },
         {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1273,6 +1283,16 @@ export const IDL: Plege = {
         {
           "name": "subscriberAta",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
           "isSigner": false
         },
         {

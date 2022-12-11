@@ -207,12 +207,12 @@ export async function cancelSubscription(
     .accounts({
       app,
       tier,
-      subscriber: global.testKeypairs.subscriber.publicKey,
+      subscriber: subscriber.publicKey,
       subscriberAta,
       subscriptionThread: thread,
       threadProgram: THREAD_PROGRAM,
     })
-    .signers([global.testKeypairs.subscriber])
+    .signers([subscriber])
     .rpc()
 }
 
