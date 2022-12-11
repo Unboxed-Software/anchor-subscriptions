@@ -11,6 +11,8 @@ declare_id!("2KiKoVaRF894axqfgEbuQhgHmNWbMY1fgC1NBEqQNu4c");
 
 #[program]
 pub mod plege {
+    use clockwork_sdk::ThreadResponse;
+
     use super::*;
 
     pub fn create_user(ctx: Context<CreateUser>) -> Result<()> {
@@ -39,7 +41,14 @@ pub mod plege {
         instructions::cancel_subscription(ctx)
     }
 
-    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
+    pub fn close_subscription_account(
+        ctx: Context<CloseSubscriptionAccount>,
+        subscription_bump: u8,
+    ) -> Result<()> {
+        instructions::close_subscription_account(ctx, subscription_bump)
+    }
+
+    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<ThreadResponse> {
         instructions::complete_payment(ctx)
     }
 

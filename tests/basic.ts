@@ -5,7 +5,16 @@ import {
   mintToChecked,
 } from "@solana/spl-token"
 import { BN } from "@project-serum/anchor"
-import { expect } from "chai"
+import chai from "chai"
+import chaiAsPromised from "chai-as-promised"
+import {
+  cancelSubscription,
+  completePayment,
+  createSubscription,
+} from "./utils/basic-functions"
+
+chai.use(chaiAsPromised)
+const expect = chai.expect
 
 xdescribe("basic flow", () => {
   it("creates user", async () => {
@@ -52,16 +61,12 @@ xdescribe("basic flow", () => {
   })
 
   it("create subscription", async () => {
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier,
-        subscriber: global.testKeypairs.subscriber.publicKey,
-        subscriberAta,
-      })
-      .signers([global.testKeypairs.subscriber])
-      .rpc()
+    const { subscription, subscriptionThread } = await createSubscription(
+      app,
+      tier,
+      global.testKeypairs.subscriber,
+      subscriberAta
+    )
 
     const subscriptionPDA = await global.program.account.subscription.fetch(
       subscription
@@ -82,16 +87,7 @@ xdescribe("basic flow", () => {
   it("completes payment", async () => {
     const before = await global.program.account.subscription.fetch(subscription)
 
-    await global.program.methods
-      .completePayment()
-      .accounts({
-        app,
-        tier,
-        destination: colossalAta,
-        subscriberAta,
-        subscription,
-      })
-      .rpc()
+    await completePayment(app, tier, colossalAta, subscriberAta, subscription)
 
     const subscriptionPDA = await global.program.account.subscription.fetch(
       subscription
@@ -108,47 +104,61 @@ xdescribe("basic flow", () => {
   })
 
   it("cancels subscription", async () => {
-    await global.program.methods
-      .cancelSubscription()
-      .accounts({
-        app,
-        tier,
-        subscriber: global.testKeypairs.subscriber.publicKey,
-        subscriberAta,
-      })
-      .signers([global.testKeypairs.subscriber])
-      .rpc()
-
-    const subscriptionPDA = await global.connection.getAccountInfo(subscription)
-    expect(subscriptionPDA).to.equal(null)
-  })
-
-  it("creates subscription again", async () => {
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier,
-        subscriber: global.testKeypairs.subscriber.publicKey,
-        subscriberAta,
-      })
-      .signers([global.testKeypairs.subscriber])
-      .rpc()
+    await cancelSubscription(
+      app,
+      tier,
+      global.testKeypairs.subscriber,
+      subscriberAta
+    )
 
     const subscriptionPDA = await global.program.account.subscription.fetch(
       subscription
     )
-
-    expect(subscriptionPDA.app.toBase58()).to.equal(app.toBase58())
-    expect(subscriptionPDA.tier.toBase58()).to.equal(tier.toBase58())
-    expect(subscriptionPDA.subscriber.toBase58()).to.equal(
-      global.testKeypairs.subscriber.publicKey.toBase58()
-    )
-    const startTime = new Date(subscriptionPDA.start * 1000)
-    expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
-    expect(subscriptionPDA.amountPaid.toNumber()).to.equal(0)
-    expect(subscriptionPDA.active).to.equal(true)
+    expect(subscriptionPDA.acceptNewPayments).to.equal(false)
   })
+
+  it("attempting to create subscription again fails", async () => {
+    expect(
+      createSubscription(
+        app,
+        tier,
+        global.testKeypairs.subscriber,
+        subscriberAta
+      )
+    ).to.eventually.be.rejected
+  })
+
+  // it("can close subscription")
+
+  // it("can create subscription again after closing account", async () => {
+  //   await global.program.methods
+  //     .createSubscription()
+  //     .accounts({
+  //       threadProgram: threadProgram,
+  //       subscriptionThread: thread,
+  //       app,
+  //       tier,
+  //       subscriber: global.testKeypairs.subscriber.publicKey,
+  //       subscriberAta,
+  //     })
+  //     .signers([global.testKeypairs.subscriber])
+  //     .rpc()
+
+  //   const subscriptionPDA = await global.program.account.subscription.fetch(
+  //     subscription
+  //   )
+
+  //   expect(subscriptionPDA.app.toBase58()).to.equal(app.toBase58())
+  //   expect(subscriptionPDA.tier.toBase58()).to.equal(tier.toBase58())
+  //   expect(subscriptionPDA.subscriber.toBase58()).to.equal(
+  //     global.testKeypairs.subscriber.publicKey.toBase58()
+  //   )
+  //   const startTime = new Date(subscriptionPDA.start * 1000)
+  //   expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
+  //   expect(subscriptionPDA.start.toNumber()).to.equal(
+  //     subscriptionPDA.payPeriodExpiration.toNumber()
+  //   )
+  // })
 
   before(async () => {
     ;[app] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -174,6 +184,18 @@ xdescribe("basic flow", () => {
         global.testKeypairs.subscriber.publicKey.toBuffer(),
       ],
       global.program.programId
+    )
+
+    threadProgram = new anchor.web3.PublicKey(
+      "3XXuUFfweXBwFgFfYaejLvZE4cGZiHgKiGfMtdxNzYmv"
+    )
+    ;[thread] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("thread"),
+        subscription.toBuffer(),
+        Buffer.from("subscriber_thread"),
+      ],
+      threadProgram
     )
 
     colossalAta = await createAssociatedTokenAccount(
@@ -209,4 +231,11 @@ xdescribe("basic flow", () => {
   })
 })
 
-let colossalAta, subscriberAta, hackerAta, app, tier, subscription
+let colossalAta,
+  subscriberAta,
+  hackerAta,
+  app,
+  tier,
+  subscription,
+  thread,
+  threadProgram

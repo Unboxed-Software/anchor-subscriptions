@@ -20,6 +20,19 @@ impl Interval {
         }
     }
 
+    pub fn cron_schedule(self, _current_time: i64) -> String {
+        match self {
+            Interval::Month => {
+                //"0 0 1 * *".to_owned()
+                "*/10 * * * * * *".to_string()
+            }
+            Interval::Year => {
+                //"0 0 1 1 *".to_owned()
+                "*/10 * * * * * *".to_string()
+            }
+        }
+    }
+
     pub fn increment(self, current: i64) -> i64 {
         let start = NaiveDateTime::from_timestamp_opt(current, 0).unwrap();
 
