@@ -11,7 +11,7 @@ use plege::{program::Plege, state::App};
 use crate::{
     assertions::assert_unique_split,
     error::ReferralError,
-    state::{PubkeyWithWeight, Referralship, Splits8, APP, REFERRALSHIP},
+    state::{PubkeyWithWeight, Referralship, Splits8, APP, REFERRALSHIP, TREASURY},
 };
 
 #[derive(Accounts)]
@@ -24,22 +24,33 @@ pub struct CreateReferralship<'info> {
         seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref()],
         bump
     )]
-    pub referralship: Account<'info, Referralship>,
+    pub referralship: Box<Account<'info, Referralship>>,
     #[account(
         seeds = [APP.as_bytes(), app_authority.key().as_ref(), app_id.to_be_bytes().as_ref()],
         seeds::program = plege_program.key(),
         bump,
     )]
-    pub app: Account<'info, App>,
-    pub treasury_mint: Account<'info, Mint>,
-    pub referral_agents_collection_nft_mint: Account<'info, Mint>,
+    pub app: Box<Account<'info, App>>,
+    #[account(
+        init,
+        payer = app_authority,
+        token::mint = treasury_mint,
+        token::authority = referralship,
+        seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref(), TREASURY.as_bytes(), treasury_mint.key().as_ref()],
+        bump
+    )]
+    pub treasury_token_account: Box<Account<'info, TokenAccount>>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
+    pub referral_agents_collection_nft_mint: Box<Account<'info, Mint>>,
     /// CHECK: we will manually deserialize and check this account
     pub referral_agents_collection_nft_metadata: UncheckedAccount<'info>,
     #[account(mut)]
     #[account(constraint = app_authority.key() == app.auth.key() @ ReferralError::InvalidAppAuthority)]
     pub app_authority: Signer<'info>,
     pub plege_program: Program<'info, Plege>,
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 pub fn create_referralship(

@@ -53,6 +53,19 @@ function findReferralAddress(
   ], programId);
 }
 
+function findReferralshipTreasuryAccountAddress(
+  app: PublicKey,
+  treasuryMint: PublicKey,
+  programId: PublicKey,
+) {
+  return PublicKey.findProgramAddressSync([
+    Buffer.from("REFERRALSHIP"),
+    app.toBuffer(),
+    Buffer.from("TREASURY"),
+    treasuryMint.toBuffer(),
+  ], programId);
+}
+
 describe("referrals", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const referralProgram = anchor.workspace.Referrals as anchor.Program<
@@ -78,13 +91,6 @@ describe("referrals", () => {
       treasuryAuthorityKeypair.publicKey,
       treasuryAuthorityKeypair.publicKey,
       0,
-    );
-
-    const treasuryTokenAccount = await createAssociatedTokenAccount(
-      connection,
-      treasuryAuthorityKeypair,
-      treasuryMint,
-      treasuryAuthorityKeypair.publicKey,
     );
 
     const referralAgentTokenAccount = await createAssociatedTokenAccount(
@@ -139,6 +145,13 @@ describe("referrals", () => {
       subscriptionProgram.programId,
     );
 
+    const [referralshipTreasuryAddress] =
+      findReferralshipTreasuryAccountAddress(
+        appAddress,
+        treasuryMint,
+        referralProgram.programId,
+      );
+
     const createAppIx = await subscriptionProgram.methods.createApp(
       appId,
       "super app",
@@ -148,7 +161,7 @@ describe("referrals", () => {
           app: appAddress,
           auth: appAuthorityKeypair.publicKey,
           userMeta: userMetaAddress,
-          treasury: treasuryTokenAccount,
+          treasury: referralshipTreasuryAddress,
           systemProgram: SystemProgram.programId,
         },
       ).instruction();
@@ -156,7 +169,7 @@ describe("referrals", () => {
     const tierArgs = {
       name: "basic",
       id: 1,
-      price: 102,
+      price: 100,
       interval: { month: {} }, // monthly
     };
     const tierAddress = tierAccountKey(appAddress, 1);
@@ -269,7 +282,7 @@ describe("referrals", () => {
       connection,
       treasuryAuthorityKeypair,
       treasuryMint,
-      treasuryTokenAccount,
+      referralshipTreasuryAddress,
       treasuryAuthorityKeypair,
       treasuryInitialBalance,
     );
@@ -318,7 +331,7 @@ describe("referrals", () => {
       referralAgentsCollectionNftMetadata:
         referralAgentsCollectionNFT.metadataAddress,
       treasuryMint: treasuryMint,
-      treasuryTokenAccount: treasuryTokenAccount,
+      treasuryTokenAccount: referralshipTreasuryAddress,
       treasuryAuthority: treasuryAuthorityKeypair.publicKey,
       tokenProgram: TOKEN_PROGRAM_ID,
     };
@@ -346,8 +359,7 @@ describe("referrals", () => {
         referralAgentsCollectionNftMetadata:
           referralAgentsCollectionNFT.metadataAddress,
         treasuryMint: treasuryMint,
-        treasuryTokenAccount: treasuryTokenAccount,
-        treasuryAuthority: treasuryAuthorityKeypair.publicKey,
+        treasuryTokenAccount: referralshipTreasuryAddress,
         plegeProgram: subscriptionProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -366,9 +378,7 @@ describe("referrals", () => {
       .instruction();
 
     let splitTx = new Transaction().add(splitIx);
-    await anchor.getProvider().sendAndConfirm(splitTx, [
-      treasuryAuthorityKeypair,
-    ], {
+    await anchor.getProvider().sendAndConfirm(splitTx, [], {
       skipPreflight: true,
     });
   });

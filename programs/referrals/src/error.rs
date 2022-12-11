@@ -19,4 +19,5 @@ pub enum ReferralError {
     InvalidSplitRecipientTreasuryTokenAccount,
     InvalidSplit,
     DuplicateSplit,
+    InvalidBump,
 }

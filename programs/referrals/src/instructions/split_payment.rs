@@ -15,7 +15,7 @@ use crate::{
     error::ReferralError,
     state::{
         Referral, Referralship, Splits8, APP, REFERRAL, REFERRALSHIP, SUBSCRIPTION,
-        SUBSCRIPTION_TIER,
+        SUBSCRIPTION_TIER, TREASURY,
     },
 };
 
@@ -69,9 +69,14 @@ pub struct SplitPayment<'info> {
     /// CHECK: This account will be manually deserialized and checked.
     pub referral_agents_collection_nft_metadata: UncheckedAccount<'info>,
     pub treasury_mint: Box<Account<'info, Mint>>,
-    #[account(mut)]
+    #[account(
+        mut,
+        token::mint = treasury_mint,
+        token::authority = referralship,
+        seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref(), TREASURY.as_bytes(), treasury_mint.key().as_ref()],
+        bump
+    )]
     pub treasury_token_account: Box<Account<'info, TokenAccount>>,
-    pub treasury_authority: Signer<'info>,
     pub plege_program: Program<'info, Plege>,
     pub token_program: Program<'info, Token>,
 }
@@ -93,7 +98,6 @@ pub fn split_payment<'info>(
         &ctx.accounts.referral_agents_collection_nft_metadata;
     let treasury_mint = &ctx.accounts.treasury_mint;
     let treasury_token_account = &ctx.accounts.treasury_token_account;
-    let treasury_authority = &ctx.accounts.treasury_authority;
     let token_program = &ctx.accounts.token_program;
 
     // make sure the referral agents collection nft metadata belongs to the token metadata program
@@ -162,14 +166,41 @@ pub fn split_payment<'info>(
     let referral_agent_claim_amount =
         Splits8::calculate_amount(referralship.splits.referral_agent, tier.price);
 
+    // let signer_seeds: &[&[&[u8]]] = &[&[
+    //     b"canvas".as_ref(),
+    //     canvas.creator.as_ref(),
+    //     canvas.canvas_model.as_ref(),
+    //     canvas.name.as_bytes(),
+    //     bump_vector.as_ref(),
+    // ]];
+
+    let wrapped_referralship_bump = ctx
+        .bumps
+        .get("referralship")
+        .ok_or(ReferralError::InvalidBump)?
+        .to_le_bytes();
+
+    // seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref()],
+    let app_key = app.key();
+    let referralship_signer_seeds: &[&[&[u8]]] = &[&[
+        REFERRALSHIP.as_bytes(),
+        app_key.as_ref(),
+        wrapped_referralship_bump.as_ref(),
+    ]];
+
     // transfer the referral agent's split amount to their treasury token account
+
     let transfer_accounts = Transfer {
         from: treasury_token_account.to_account_info(),
         to: referral_agent_treasury_token_account.to_account_info(),
-        authority: treasury_authority.to_account_info(),
+        authority: referralship.to_account_info(),
     };
 
-    let transfer_context = CpiContext::new(token_program.to_account_info(), transfer_accounts);
+    let transfer_context = CpiContext::new_with_signer(
+        token_program.to_account_info(),
+        transfer_accounts,
+        referralship_signer_seeds,
+    );
     token::transfer(transfer_context, referral_agent_claim_amount)?;
 
     let splits = referralship.splits.as_hashmap();
@@ -210,10 +241,13 @@ pub fn split_payment<'info>(
         let transfer_accounts = Transfer {
             from: treasury_token_account.to_account_info(),
             to: token_account_info.clone(),
-            authority: treasury_authority.to_account_info(),
+            authority: referralship.to_account_info(),
         };
-        let transfer_context =
-            CpiContext::new(token_program_account_info.clone(), transfer_accounts);
+        let transfer_context = CpiContext::new_with_signer(
+            token_program_account_info.clone(),
+            transfer_accounts,
+            referralship_signer_seeds,
+        );
 
         token::transfer(transfer_context, split_recipient_claim_amount)?;
         visited.insert(token_account_info.key());

@@ -9,6 +9,7 @@ pub use splits::*;
 pub const REFERRAL: &str = "REFERRAL";
 pub const REFERRAL_AGENT: &str = "REFERRAL_AGENT";
 pub const REFERRALSHIP: &str = "REFERRALSHIP";
+pub const TREASURY: &str = "TREASURY";
 // TODO: Move these to plege program lib.
 pub const APP: &str = "APP";
 pub const SUBSCRIPTION: &str = "SUBSCRIPTION";

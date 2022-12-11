@@ -15,7 +15,7 @@ use plege::{
 
 use crate::{
     error::ReferralError,
-    state::{Referral, Referralship, REFERRAL, APP, REFERRALSHIP, SUBSCRIPTION_TIER},
+    state::{Referral, Referralship, REFERRAL, APP, REFERRALSHIP, SUBSCRIPTION_TIER, TREASURY},
 };
 
 #[derive(Accounts)]
