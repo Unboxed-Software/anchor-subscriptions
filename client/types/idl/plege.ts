@@ -229,6 +229,16 @@ export type Plege = {
           "isSigner": false
         },
         {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -290,6 +300,16 @@ export type Plege = {
           "isSigner": false
         },
         {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -301,6 +321,47 @@ export type Plege = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "closeSubscriptionAccount",
+      "accounts": [
+        {
+          "name": "app",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "subscription",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "subscriber",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "subscriptionBump",
+          "type": "u8"
+        }
+      ]
     },
     {
       "name": "completePayment",
@@ -331,6 +392,11 @@ export type Plege = {
           "isSigner": false
         },
         {
+          "name": "subscriptionThread",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -341,7 +407,10 @@ export type Plege = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [],
+      "returns": {
+        "defined": "ThreadResponse"
+      }
     },
     {
       "name": "disallowNewSubscribers",
@@ -472,6 +541,16 @@ export type Plege = {
         {
           "name": "subscriberAta",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -892,6 +971,16 @@ export const IDL: Plege = {
           "isSigner": false
         },
         {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -953,6 +1042,16 @@ export const IDL: Plege = {
           "isSigner": false
         },
         {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -964,6 +1063,47 @@ export const IDL: Plege = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "closeSubscriptionAccount",
+      "accounts": [
+        {
+          "name": "app",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "subscription",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "subscriber",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "subscriptionBump",
+          "type": "u8"
+        }
+      ]
     },
     {
       "name": "completePayment",
@@ -994,6 +1134,11 @@ export const IDL: Plege = {
           "isSigner": false
         },
         {
+          "name": "subscriptionThread",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1004,7 +1149,10 @@ export const IDL: Plege = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [],
+      "returns": {
+        "defined": "ThreadResponse"
+      }
     },
     {
       "name": "disallowNewSubscribers",
@@ -1135,6 +1283,16 @@ export const IDL: Plege = {
         {
           "name": "subscriberAta",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "subscriptionThread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "threadProgram",
+          "isMut": false,
           "isSigner": false
         },
         {

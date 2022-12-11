@@ -41,10 +41,23 @@ export function tierAccountKey(
 export function subscriptionAccountKey(
   subscriber: web3.PublicKey,
   app: web3.PublicKey
-): web3.PublicKey {
+): [web3.PublicKey, number] {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
     global.program.programId
+  )
+}
+
+export function subscriptionThreadKey(
+  subscription: web3.PublicKey
+): web3.PublicKey {
+  return web3.PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("thread"),
+      subscription.toBuffer(),
+      Buffer.from("subscriber_thread"),
+    ],
+    THREAD_PROGRAM
   )[0]
 }
 
@@ -141,4 +154,86 @@ export async function createGeneralScaffolding(): Promise<{
     tier3,
     tier4,
   }
+}
+
+export async function createSubscription(
+  app: web3.PublicKey,
+  tier: web3.PublicKey,
+  subscriber: web3.Keypair,
+  subscriberAta: web3.PublicKey
+): Promise<{
+  subscription: any
+  subscriptionThread: any
+  subscriptionBump: number
+}> {
+  let [subscription, subscriptionBump] = subscriptionAccountKey(
+    subscriber.publicKey,
+    app
+  )
+
+  let thread = subscriptionThreadKey(subscription)
+
+  await global.program.methods
+    .createSubscription()
+    .accounts({
+      threadProgram: THREAD_PROGRAM,
+      subscriptionThread: thread,
+      app,
+      tier,
+      subscriber: subscriber.publicKey,
+      subscriberAta,
+    })
+    .signers([subscriber])
+    .rpc()
+
+  return { subscription, subscriptionThread: thread, subscriptionBump }
+}
+
+export const THREAD_PROGRAM = new web3.PublicKey(
+  "3XXuUFfweXBwFgFfYaejLvZE4cGZiHgKiGfMtdxNzYmv"
+)
+
+export async function cancelSubscription(
+  app: web3.PublicKey,
+  tier: web3.PublicKey,
+  subscriber: web3.Keypair,
+  subscriberAta: web3.PublicKey
+) {
+  let [subscription] = subscriptionAccountKey(subscriber.publicKey, app)
+  let thread = subscriptionThreadKey(subscription)
+
+  await global.program.methods
+    .cancelSubscription()
+    .accounts({
+      app,
+      tier,
+      subscriber: subscriber.publicKey,
+      subscriberAta,
+      subscriptionThread: thread,
+      threadProgram: THREAD_PROGRAM,
+    })
+    .signers([subscriber])
+    .rpc()
+}
+
+export async function completePayment(
+  app: web3.PublicKey,
+  tier: web3.PublicKey,
+  destination: web3.PublicKey,
+  subscriberAta: web3.PublicKey,
+  subscription: web3.PublicKey
+) {
+  const thread = subscriptionThreadKey(subscription)
+
+  await global.program.methods
+    .completePayment()
+    .accounts({
+      app,
+      tier,
+      destination: destination,
+      subscriberAta,
+      subscription,
+      subscriptionThread: thread,
+    })
+    .rpc()
 }

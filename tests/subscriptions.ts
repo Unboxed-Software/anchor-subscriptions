@@ -6,26 +6,26 @@ import {
 import chaiAsPromised from "chai-as-promised"
 import chai from "chai"
 import {
+  cancelSubscription,
+  completePayment,
   createGeneralScaffolding,
-  subscriptionAccountKey,
+  createSubscription,
+  THREAD_PROGRAM,
 } from "./utils/basic-functions"
 import generateFundedKeypair from "./utils/keypair"
+import { web3 } from "@project-serum/anchor"
 
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
 describe("subscription functionality", () => {
   it("subscriber can't switch tiers before paying", async () => {
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber1.publicKey,
-        subscriberAta: subscriber1Ata,
-      })
-      .signers([subscriber1])
-      .rpc()
+    const { subscription, subscriptionThread } = await createSubscription(
+      app,
+      tier1,
+      subscriber1,
+      subscriber1Ata
+    )
 
     await expect(
       global.program.methods
@@ -36,6 +36,8 @@ describe("subscription functionality", () => {
           app,
           subscriber: subscriber1.publicKey,
           subscriberAta: subscriber1Ata,
+          subscriptionThread: subscriptionThread,
+          threadProgram: THREAD_PROGRAM,
         })
         .signers([subscriber1])
         .rpc()
@@ -43,16 +45,12 @@ describe("subscription functionality", () => {
   })
 
   it("subscriber can switch tier after paying", async () => {
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber1.publicKey,
-        subscriberAta: subscriber1Ata,
-      })
-      .signers([subscriber1])
-      .rpc()
+    const { subscription, subscriptionThread } = await createSubscription(
+      app,
+      tier1,
+      subscriber1,
+      subscriber1Ata
+    )
 
     let destination = await createAssociatedTokenAccount(
       global.connection,
@@ -61,18 +59,7 @@ describe("subscription functionality", () => {
       auth.publicKey
     )
 
-    const subscription1 = subscriptionAccountKey(subscriber1.publicKey, app)
-
-    await global.program.methods
-      .completePayment()
-      .accounts({
-        app,
-        tier: tier1,
-        destination: destination,
-        subscriberAta: subscriber1Ata,
-        subscription: subscription1,
-      })
-      .rpc()
+    await completePayment(app, tier1, destination, subscriber1Ata, subscription)
 
     await global.program.methods
       .switchSubscriptionTier()
@@ -82,25 +69,23 @@ describe("subscription functionality", () => {
         app,
         subscriber: subscriber1.publicKey,
         subscriberAta: subscriber1Ata,
+        subscriptionThread: subscriptionThread,
+        threadProgram: THREAD_PROGRAM,
       })
       .signers([subscriber1])
       .rpc()
 
-    const sub = await global.program.account.subscription.fetch(subscription1)
+    const sub = await global.program.account.subscription.fetch(subscription)
     expect(sub.tier.toBase58()).to.equal(tier2.toBase58())
   })
 
   it("switching tiers credits unused balance to new tier", async () => {
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber1.publicKey,
-        subscriberAta: subscriber1Ata,
-      })
-      .signers([subscriber1])
-      .rpc()
+    const { subscription, subscriptionThread } = await createSubscription(
+      app,
+      tier1,
+      subscriber1,
+      subscriber1Ata
+    )
 
     let destination = await createAssociatedTokenAccount(
       global.connection,
@@ -109,18 +94,7 @@ describe("subscription functionality", () => {
       auth.publicKey
     )
 
-    const subscription1 = subscriptionAccountKey(subscriber1.publicKey, app)
-
-    await global.program.methods
-      .completePayment()
-      .accounts({
-        app,
-        tier: tier1,
-        destination: destination,
-        subscriberAta: subscriber1Ata,
-        subscription: subscription1,
-      })
-      .rpc()
+    await completePayment(app, tier1, destination, subscriber1Ata, subscription)
 
     await global.program.methods
       .switchSubscriptionTier()
@@ -130,23 +104,36 @@ describe("subscription functionality", () => {
         app,
         subscriber: subscriber1.publicKey,
         subscriberAta: subscriber1Ata,
+        subscriptionThread: subscriptionThread,
+        threadProgram: THREAD_PROGRAM,
       })
       .signers([subscriber1])
       .rpc()
 
-    await global.program.methods
-      .completePayment()
-      .accounts({
-        app,
-        tier: tier2,
-        destination: destination,
-        subscriberAta: subscriber1Ata,
-        subscription: subscription1,
-      })
-      .rpc()
+    await completePayment(app, tier2, destination, subscriber1Ata, subscription)
 
     const destinationAta = await getAccount(global.connection, destination)
     expect(Number(destinationAta.amount)).to.equal(10)
+  })
+
+  it("subscription can be closed if inactive", async () => {
+    let subscription, subscriptionThread, subscriptionBump
+    ;({ subscription, subscriptionThread, subscriptionBump } =
+      await createSubscription(app, tier1, subscriber1, subscriber1Ata))
+
+    await cancelSubscription(app, tier1, subscriber1, subscriber1Ata)
+
+    await global.program.methods
+      .closeSubscriptionAccount(subscriptionBump)
+      .accounts({
+        app,
+        subscription,
+        subscriber: subscriber1.publicKey,
+        subscriptionThread,
+        threadProgram: THREAD_PROGRAM,
+      })
+      .signers([subscriber1])
+      .rpc()
   })
 
   let user,
@@ -216,15 +203,11 @@ describe("subscription functionality", () => {
       5
     )
 
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber.publicKey,
-        subscriberAta: subscriberAta,
-      })
-      .signers([subscriber])
-      .rpc()
+    const { subscription, subscriptionThread } = await createSubscription(
+      app,
+      tier1,
+      subscriber,
+      subscriberAta
+    )
   })
 })
