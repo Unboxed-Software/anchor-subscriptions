@@ -1,9 +1,7 @@
-use std::cmp::max;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 use crate::state::*;
-use chrono::*;
+use crate::error::PlegeError;
 
 #[derive(Accounts)]
 pub struct CompletePayment<'info> {
@@ -19,11 +17,11 @@ pub struct CompletePayment<'info> {
     )]
     pub tier: Account<'info, Tier>,
     #[account(mut,
-        constraint = {msg!("destination"); destination.owner == app.treasury.key() && destination.mint == tier.mint},
+        constraint = {msg!("destination"); destination.owner == app.treasury.key() && destination.mint == app.mint},
     )]
     pub destination: Account<'info, TokenAccount>,
     #[account(mut, constraint = {msg!("subscriber_ata"); subscriber_ata.owner == subscription.subscriber.key()
-        && subscriber_ata.mint == tier.mint && subscriber_ata.amount >= tier.price},
+        && subscriber_ata.mint == app.mint && subscriber_ata.amount >= tier.price},
     )]
     pub subscriber_ata: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
@@ -39,62 +37,74 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
     let token_program = ctx.accounts.token_program.to_account_info();
 
     let now_timestamp = Clock::get().unwrap().unix_timestamp;
-    let intervals = intervals_since_start(subscription.start, now_timestamp, tier.interval);
 
-    let total = (intervals as u64)*tier.price;
-    let balance = total - subscription.amount_paid;
+    let last_pay_period: i64 = subscription.pay_period_expiration;
+
+    require!(tier.interval.grace_period() > now_timestamp - last_pay_period, PlegeError::MissedPayment);
+    require!(subscription.accept_new_payments, PlegeError::InactiveSubscription);
+
+    let balance = tier.price - subscription.credits;
+
     msg!("balance is {:?}", balance);
-    let transfer_accounts = Transfer {
-        from: subscriber_ata.clone(),
-        to: destination.clone(),
-        authority: subscription.to_account_info().clone(),
-    };
-    
-    let app_key = app.key();
-    let subscriber_key = subscription.subscriber;
-    let subscription_bump = subscription.bump;
-    let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
-    let signers = [&seeds[..]];
-    let transfer_amount = balance;
 
-    let transfer_ctx =
-            CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
+    if balance > 0 {
+        let transfer_accounts = Transfer {  
+            from: subscriber_ata.clone(),
+            to: destination.clone(),
+            authority: subscription.to_account_info().clone(),
+        };
 
-    transfer(transfer_ctx, transfer_amount)?;
+        let app_key = app.key();
+        let subscriber_key = subscription.subscriber;
+        let subscription_bump = subscription.bump;
+        let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
+        let signers = [&seeds[..]];
+        let transfer_amount = balance;
 
-    subscription.amount_paid = total;
+        let transfer_ctx =
+                CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
+
+        transfer(transfer_ctx, transfer_amount)?;
+    } else {
+        subscription.credits -= tier.price;
+    }
+
+    subscription.last_payment_time = Some(now_timestamp);
+    subscription.pay_period_start = subscription.pay_period_expiration;
+    subscription.pay_period_expiration = tier.interval.increment(last_pay_period);
 
     Ok(())
 }
 
-pub fn intervals_since_start(start: i64, now: i64, interval: Interval) -> u32 {
-    let now = NaiveDateTime::from_timestamp_opt(now, 0).unwrap();
-    let start = NaiveDateTime::from_timestamp_opt(start, 0).unwrap();
 
-    match interval {
-        Interval::Month => months_since_start(start, now) + 1,
-        Interval::Year => years_since_start(start, now) + 1
-    }
-}
+// pub fn intervals_since_start(start: i64, now: i64, interval: Interval) -> u32 {
+//     let now = NaiveDateTime::from_timestamp_opt(now, 0).unwrap();
+//     let start = NaiveDateTime::from_timestamp_opt(start, 0).unwrap();
 
-pub fn months_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
-    let years = now.year() - start.year();
-    let months = now.month() - start.month();
+//     match interval {
+//         Interval::Month => months_since_start(start, now) + 1,
+//         Interval::Year => years_since_start(start, now) + 1
+//     }
+// }
 
-    let mut months = (years as u32)*12 + months;
-    if now.day() < start.day() {
-        months -= 1;
-    }
+// pub fn months_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
+//     let years = now.year() - start.year();
+//     let months = now.month() - start.month();
 
-    return months;
-}
+//     let mut months = (years as u32)*12 + months;
+//     if now.day() < start.day() {
+//         months -= 1;
+//     }
 
-pub fn years_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
-    let years = now.year() - start.year();
-    if (now.month() == start.month() && now.day() >= start.day()) ||
-        now.month() > start.month() {
-        return years as u32;
-    } else {
-        return max(0, (years as u32) - 1);
-    }
-}
+//     return months;
+// }
+
+// pub fn years_since_start(start: NaiveDateTime, now: NaiveDateTime) -> u32 {
+//     let years = now.year() - start.year();
+//     if (now.month() == start.month() && now.day() >= start.day()) ||
+//         now.month() > start.month() {
+//         return years as u32;
+//     } else {
+//         return max(0, (years as u32) - 1);
+//     }
+// }

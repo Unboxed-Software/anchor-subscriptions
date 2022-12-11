@@ -1,8 +1,5 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
-
-use crate::error::PledgeError;
 use crate::state::*;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct ToggleNewSubscribers<'info> {

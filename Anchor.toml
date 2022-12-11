@@ -3,15 +3,18 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-plege = "3xRXzaS1gJ8jvh5jjsXqyhn7tE1qrEet9wNSYqPfgtAH"
 referrals = "2kY5DJedxxDkGXohsSQh5kLNz4bpjEZ2YGVSrsgNQdG1"
+plege = "2KiKoVaRF894axqfgEbuQhgHmNWbMY1fgC1NBEqQNu4c"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha --require tests/utils/globalSetup.ts -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[workspace]
+types = "client/types/idl/"

@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
-
-use crate::error::PledgeError;
+use crate::error::PlegeError;
 use crate::state::*;
+use anchor_lang::prelude::*;
+use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 #[instruction(app_id: u8)]
@@ -18,9 +18,10 @@ pub struct CreateApp<'info> {
         seeds = ["USER_META".as_bytes(), auth.key().as_ref()],
         bump,
         has_one = auth,
-        constraint = app_id == user_meta.num_apps + 1 @ PledgeError::InvalidAppId,
+        constraint = app_id == user_meta.num_apps + 1 @ PlegeError::InvalidAppId,
     )]
     pub user_meta: Account<'info, UserMeta>,
+    pub mint: Account<'info, Mint>,
     /// CHECK: Arbitrary treasury account chosen by app creator
     pub treasury: UncheckedAccount<'info>,
     #[account(mut)]
@@ -33,10 +34,12 @@ pub fn create_app(ctx: Context<CreateApp>, _app_id: u8, name: String) -> Result<
     let auth = &ctx.accounts.auth;
     let treasury = &ctx.accounts.treasury;
     let user_meta = &mut ctx.accounts.user_meta;
+    let mint = ctx.accounts.mint.clone();
 
     app.auth = *auth.to_account_info().key;
     app.name = name;
     app.treasury = *treasury.to_account_info().key;
+    app.mint = mint.key();
 
     user_meta.num_apps += 1;
 

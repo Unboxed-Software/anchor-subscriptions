@@ -7,7 +7,7 @@ pub mod state;
 use instructions::*;
 use state::Interval;
 
-declare_id!("3xRXzaS1gJ8jvh5jjsXqyhn7tE1qrEet9wNSYqPfgtAH");
+declare_id!("2KiKoVaRF894axqfgEbuQhgHmNWbMY1fgC1NBEqQNu4c");
 
 #[program]
 pub mod plege {
@@ -53,5 +53,9 @@ pub mod plege {
 
     pub fn disable_tier(ctx: Context<ToggleNewSubscribers>) -> Result<()> {
         instructions::disable_tier(ctx)
+    }
+
+    pub fn switch_subscription_tier(ctx: Context<SwitchSubscriptionTier>) -> Result<()> {
+        instructions::switch_subscription_tier(ctx)
     }
 }

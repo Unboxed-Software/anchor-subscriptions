@@ -18,7 +18,7 @@ pub struct CancelSubscription<'info> {
     #[account(mut)]
     pub subscriber: Signer<'info>,
     #[account(mut,
-        constraint = subscriber_ata.mint == tier.mint && subscriber_ata.owner == subscriber.key() && subscriber_ata.amount >= tier.price,
+        constraint = subscriber_ata.mint == app.mint && subscriber_ata.owner == subscriber.key() && subscriber_ata.amount >= tier.price,
     )]
     pub subscriber_ata: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
@@ -26,10 +26,12 @@ pub struct CancelSubscription<'info> {
 }
 
 pub fn cancel_subscription(ctx: Context<CancelSubscription>) -> Result<()> {
-    // let subscription = &mut ctx.accounts.subscription;
+    let subscription = &mut ctx.accounts.subscription;
     let subscriber = &mut ctx.accounts.subscriber.to_account_info();
     let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
+
+    subscription.accept_new_payments = false;
 
     let revoke_accounts = Revoke {
         source: subscriber_ata.clone(),
@@ -38,8 +40,6 @@ pub fn cancel_subscription(ctx: Context<CancelSubscription>) -> Result<()> {
 
     let revoke_ctx = CpiContext::new(token_program.clone(), revoke_accounts);
     revoke(revoke_ctx)?;
-
-    // subscription.status = SubscriptionStatus::Canceled;
 
     Ok(())
 }
