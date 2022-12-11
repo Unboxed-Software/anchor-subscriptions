@@ -15,10 +15,11 @@ use plege::{
 
 use crate::{
     error::ReferralError,
-    state::{Referral, Referralship, REFERRAL},
+    state::{Referral, Referralship, REFERRAL, APP, REFERRALSHIP, SUBSCRIPTION_TIER},
 };
 
 #[derive(Accounts)]
+#[instruction(tier_id: u8)]
 pub struct SubscribeWithReferral<'info> {
     #[account(
         init,
@@ -33,6 +34,10 @@ pub struct SubscribeWithReferral<'info> {
         bump
     )]
     pub referral: Box<Account<'info, Referral>>,
+    #[account(
+        seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref()],
+        bump
+    )]
     pub referralship: Box<Account<'info, Referralship>>,
     pub referral_agent_nft_mint: Box<Account<'info, Mint>>,
     /// CHECK: we will manually deserialize and check this account
@@ -41,7 +46,12 @@ pub struct SubscribeWithReferral<'info> {
     /// CHECK: we will manually deserialize and check this account
     pub referral_agents_collection_nft_metadata: UncheckedAccount<'info>,
     pub treasury_mint: Box<Account<'info, Mint>>,
-    pub app: Box<Account<'info, App>>,
+    #[account(
+        seeds = [APP.as_bytes(), app_authority.key().as_ref(), referralship.app_id.to_be_bytes().as_ref()],
+        seeds::program = plege_program.key(),
+        bump,
+    )]
+    pub app: Account<'info, App>,
     /// CHECK: this account is uninitialized, and is initialized by the subscription program.
     #[account(
         mut,
@@ -55,13 +65,20 @@ pub struct SubscribeWithReferral<'info> {
     pub subscriber: Signer<'info>,
     #[account(mut)]
     pub subscriber_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(
+        seeds = [SUBSCRIPTION_TIER.as_bytes(), app.key().as_ref(), tier_id.to_be_bytes().as_ref()],
+        seeds::program = plege_program.key(),
+        bump
+    )]
     pub tier: Box<Account<'info, Tier>>,
+    /// CHECK: not being used, only for seeds
+    pub app_authority: UncheckedAccount<'info>,
     pub plege_program: Program<'info, Plege>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
-pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()> {
+pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>,  _tier_id: u8) -> Result<()> {
     let referral = &mut ctx.accounts.referral;
     let referralship = &ctx.accounts.referralship;
     let referral_agent_nft_mint = &ctx.accounts.referral_agent_nft_mint;

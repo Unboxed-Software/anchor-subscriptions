@@ -275,7 +275,7 @@ describe("referrals", () => {
     );
 
     const subscribeWithReferralIx = await referralProgram.methods
-      .subscribeWithReferral().accounts({
+      .subscribeWithReferral(tierArgs.id).accounts({
         referral: referralAddress,
         referralship: referralshipAddress,
         subscription: subscriptionAddress,
@@ -289,6 +289,7 @@ describe("referrals", () => {
         referralshipCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
         subscriberTokenAccount,
         tier: tierAddress,
+        appAuthority: appAuthorityKeypair.publicKey,
         plegeProgram: subscriptionProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -327,25 +328,29 @@ describe("referrals", () => {
     }
 
     // simulate a call from the subscription program to split payments
-    let splitIx = await referralProgram.methods.splitPayment().accounts({
-      app: appAddress,
-      subscription: subscriptionAddress,
-      tier: tierAddress,
-      subscriber: subscriberKeypair.publicKey,
-      referral: referralAddress,
-      referralship: referralshipAddress,
-      referralAgentNftMint: referralAgentNFT.mintAddress,
-      referralAgentNftMetadata: referralAgentNFT.metadataAddress,
-      referralAgentNftTokenAccount: referralAgentNFT.tokenAddress,
-      referralAgentTreasuryTokenAccount: referralAgentTokenAccount,
-      referralAgentsCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
-      referralAgentsCollectionNftMetadata:
-        referralAgentsCollectionNFT.metadataAddress,
-      treasuryMint: treasuryMint,
-      treasuryTokenAccount: treasuryTokenAccount,
-      treasuryAuthority: treasuryAuthorityKeypair.publicKey,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
+    let splitIx = await referralProgram.methods.splitPayment(tierArgs.id)
+      .accounts({
+        app: appAddress,
+        appAuthority: appAuthorityKeypair.publicKey,
+        subscription: subscriptionAddress,
+        tier: tierAddress,
+        subscriber: subscriberKeypair.publicKey,
+        referral: referralAddress,
+        referralship: referralshipAddress,
+        referralAgentNftMint: referralAgentNFT.mintAddress,
+        referralAgentNftMetadata: referralAgentNFT.metadataAddress,
+        referralAgentNftTokenAccount: referralAgentNFT.tokenAddress,
+        referralAgentTreasuryTokenAccount: referralAgentTokenAccount,
+        referralAgentsCollectionNftMint:
+          referralAgentsCollectionNFT.mintAddress,
+        referralAgentsCollectionNftMetadata:
+          referralAgentsCollectionNFT.metadataAddress,
+        treasuryMint: treasuryMint,
+        treasuryTokenAccount: treasuryTokenAccount,
+        treasuryAuthority: treasuryAuthorityKeypair.publicKey,
+        plegeProgram: subscriptionProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
       .remainingAccounts([
         {
           pubkey: stakeholder1TokenAccount,

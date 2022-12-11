@@ -6,45 +6,58 @@ use mpl_token_metadata::{
     assertions::assert_owned_by,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
 };
-use plege::state::{App, Subscription, Tier};
+use plege::{
+    program::Plege,
+    state::{App, Subscription, Tier},
+};
 
 use crate::{
     error::ReferralError,
-    state::{Referral, Referralship, Splits8, REFERRAL},
+    state::{
+        Referral, Referralship, Splits8, APP, REFERRAL, REFERRALSHIP, SUBSCRIPTION,
+        SUBSCRIPTION_TIER,
+    },
 };
 
 #[derive(Accounts)]
+#[instruction(tier_id: u8)]
 pub struct SplitPayment<'info> {
-    // #[account(
-    //     seeds = ["APP".as_bytes(), app.auth.key().as_ref(), referralship.app_id.to_be_bytes().as_ref()],
-    //     seeds::program = plege_program.key(),
-    //     bump
-    // )]
-    pub app: Box<Account<'info, App>>,
-    // #[account(
-    //     seeds = ["SUBSCRIPTION".as_bytes(), app.key().as_ref(), subscriber.key().as_ref()],
-    //     seeds::program = plege_program.key(),
-    //     bump
-    // )]
+    #[account(
+        seeds = [APP.as_bytes(), app_authority.key().as_ref(), referralship.app_id.to_be_bytes().as_ref()],
+        seeds::program = plege_program.key(),
+        bump
+    )]
+    pub app: Account<'info, App>,
+    /// CHECK: only being used for seeds.
+    pub app_authority: UncheckedAccount<'info>,
+    #[account(
+        seeds = [SUBSCRIPTION.as_bytes(), app.key().as_ref(), subscriber.key().as_ref()],
+        seeds::program = plege_program.key(),
+        bump
+    )]
     pub subscription: Box<Account<'info, Subscription>>,
     /// CHECK: Just needs to be a system account.
     pub subscriber: UncheckedAccount<'info>,
-    // #[account(
-    //     seeds = ["SUBSCRIPTION_TIER".as_bytes(), app.key().as_ref(), tier_id.to_be_bytes().as_ref()],
-    //     seeds::program = plege_program.key(),
-    //     bump
-    // )]
+    #[account(
+        seeds = [SUBSCRIPTION_TIER.as_bytes(), app.key().as_ref(), tier_id.to_be_bytes().as_ref()],
+        seeds::program = plege_program.key(),
+        bump
+    )]
     pub tier: Box<Account<'info, Tier>>,
-    // #[account(
-    //     seeds = [
-    //         REFERRAL.as_bytes(),
-    //         app.key().as_ref(),
-    //         subscription.key().as_ref(),
-    //         referral_agent_nft_mint.key().as_ref()
-    //     ],
-    //     bump
-    // )]
+    #[account(
+        seeds = [
+            REFERRAL.as_bytes(),
+            app.key().as_ref(),
+            subscription.key().as_ref(),
+            referral_agent_nft_mint.key().as_ref()
+        ],
+        bump
+    )]
     pub referral: Box<Account<'info, Referral>>,
+    #[account(
+        seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref()],
+        bump
+    )]
     pub referralship: Box<Account<'info, Referralship>>,
     pub referral_agent_nft_mint: Box<Account<'info, Mint>>,
     /// CHECK: This account will be manually deserialized and checked.
@@ -59,10 +72,14 @@ pub struct SplitPayment<'info> {
     #[account(mut)]
     pub treasury_token_account: Box<Account<'info, TokenAccount>>,
     pub treasury_authority: Signer<'info>,
+    pub plege_program: Program<'info, Plege>,
     pub token_program: Program<'info, Token>,
 }
 
-pub fn split_payment<'info>(ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>) -> Result<()> {
+pub fn split_payment<'info>(
+    ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>,
+    _tier_id: u8,
+) -> Result<()> {
     let app = &ctx.accounts.app;
     let subscription = &ctx.accounts.subscription;
     let tier = &ctx.accounts.tier;
