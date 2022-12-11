@@ -1,41 +1,32 @@
 import { createAssociatedTokenAccount, mintToChecked } from "@solana/spl-token"
 import { expect } from "chai"
 import {
+  completePayment,
   createGeneralScaffolding,
+  createSubscription,
   subscriptionAccountKey,
 } from "./utils/basic-functions"
 import generateFundedKeypair from "./utils/keypair"
 
 describe("tier functionality", () => {
   it("new tier accepts subscribers", async () => {
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber1.publicKey,
-        subscriberAta: subscriber1Ata,
-      })
-      .signers([subscriber1])
-      .rpc()
+    const { subscription: subscription1 } = await createSubscription(
+      app,
+      tier1,
+      subscriber1,
+      subscriber1Ata
+    )
 
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber2.publicKey,
-        subscriberAta: subscriber2Ata,
-      })
-      .signers([subscriber2])
-      .rpc()
+    const { subscription: subscription2 } = await createSubscription(
+      app,
+      tier1,
+      subscriber2,
+      subscriber2Ata
+    )
 
-    const subscription1 = subscriptionAccountKey(subscriber1.publicKey, app)
     const subscription1PDA = await global.program.account.subscription.fetch(
       subscription1
     )
-
-    const subscription2 = subscriptionAccountKey(subscriber1.publicKey, app)
     const subscription2PDA = await global.program.account.subscription.fetch(
       subscription2
     )
@@ -56,16 +47,7 @@ describe("tier functionality", () => {
       .rpc()
 
     try {
-      await global.program.methods
-        .createSubscription()
-        .accounts({
-          app,
-          tier: tier1,
-          subscriber: subscriber2.publicKey,
-          subscriberAta: subscriber2Ata,
-        })
-        .signers([subscriber2])
-        .rpc()
+      await createSubscription(app, tier1, subscriber2, subscriber2Ata)
     } catch (error) {
       expect(error.error.errorCode.number).to.equal(2003)
     }
@@ -88,18 +70,13 @@ describe("tier functionality", () => {
       .signers([auth])
       .rpc()
 
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber1.publicKey,
-        subscriberAta: subscriber1Ata,
-      })
-      .signers([subscriber1])
-      .rpc()
+    const { subscription: subscription1 } = await createSubscription(
+      app,
+      tier1,
+      subscriber1,
+      subscriber1Ata
+    )
 
-    const subscription1 = subscriptionAccountKey(subscriber1.publicKey, app)
     const subscription1PDA = await global.program.account.subscription.fetch(
       subscription1
     )
@@ -119,34 +96,19 @@ describe("tier functionality", () => {
       .rpc()
 
     try {
-      await global.program.methods
-        .createSubscription()
-        .accounts({
-          app,
-          tier: tier1,
-          subscriber: subscriber2.publicKey,
-          subscriberAta: subscriber2Ata,
-        })
-        .signers([subscriber2])
-        .rpc()
+      await createSubscription(app, tier1, subscriber2, subscriber2Ata)
     } catch (error) {
       expect(error.error.errorCode.number).to.equal(2003)
     }
   })
 
   it("disabling a tier stops future payments", async () => {
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber1.publicKey,
-        subscriberAta: subscriber1Ata,
-      })
-      .signers([subscriber1])
-      .rpc()
-
-    const subscription1 = subscriptionAccountKey(subscriber1.publicKey, app)
+    const { subscription: subscription1 } = await createSubscription(
+      app,
+      tier1,
+      subscriber1,
+      subscriber1Ata
+    )
 
     await global.program.methods
       .disableTier()
@@ -166,16 +128,13 @@ describe("tier functionality", () => {
     )
 
     try {
-      await global.program.methods
-        .completePayment()
-        .accounts({
-          app,
-          tier: tier1,
-          destination: destination,
-          subscriberAta: subscriber1Ata,
-          subscription: subscription1,
-        })
-        .rpc()
+      await completePayment(
+        app,
+        tier1,
+        destination,
+        subscriber1Ata,
+        subscription1
+      )
     } catch (error) {
       expect(error.error.errorCode.number).to.equal(2003)
     }
@@ -247,15 +206,6 @@ describe("tier functionality", () => {
       5
     )
 
-    await global.program.methods
-      .createSubscription()
-      .accounts({
-        app,
-        tier: tier1,
-        subscriber: subscriber.publicKey,
-        subscriberAta: subscriberAta,
-      })
-      .signers([subscriber])
-      .rpc()
+    await createSubscription(app, tier1, subscriber, subscriberAta)
   })
 })

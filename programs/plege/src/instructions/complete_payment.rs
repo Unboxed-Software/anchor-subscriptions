@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
+use clockwork_sdk::ThreadResponse;
+use clockwork_sdk::thread_program::accounts::Thread;
 use crate::state::*;
 use crate::error::PlegeError;
 
@@ -24,11 +26,16 @@ pub struct CompletePayment<'info> {
         && subscriber_ata.mint == app.mint && subscriber_ata.amount >= tier.price},
     )]
     pub subscriber_ata: Account<'info, TokenAccount>,
+    #[account(
+        constraint = subscription_thread.authority == subscription.key(),
+        constraint = subscription_thread.id == "subscriber_thread"
+    )]
+    pub subscription_thread: Box<Account<'info, Thread>>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
-pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
+pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<ThreadResponse> {
     let subscription = &mut ctx.accounts.subscription;
     let app = &mut ctx.accounts.app;
     let tier = &mut ctx.accounts.tier;
@@ -73,7 +80,7 @@ pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
     subscription.pay_period_start = subscription.pay_period_expiration;
     subscription.pay_period_expiration = tier.interval.increment(last_pay_period);
 
-    Ok(())
+    Ok(ThreadResponse::default())
 }
 
 
