@@ -15,7 +15,6 @@ exports.mochaGlobalSetup = async function () {
   global.program = program
   global.connection = connection
   await setTestKeypairs()
-
   global.mint = await createMint(
     global.connection,
     global.testKeypairs.colossal,

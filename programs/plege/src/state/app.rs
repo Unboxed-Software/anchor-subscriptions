@@ -4,8 +4,8 @@ use anchor_lang::prelude::*;
 #[derive(Debug)]
 pub struct App {
     pub auth: Pubkey,
-    pub name: String,
     pub num_tiers: u8,
     pub treasury: Pubkey,
     pub mint: Pubkey,
+    pub name: String,
 }
