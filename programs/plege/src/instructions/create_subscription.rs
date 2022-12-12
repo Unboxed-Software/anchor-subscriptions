@@ -79,7 +79,7 @@ pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     let now_timestamp = Clock::get().unwrap().unix_timestamp;
 
     let complete_payment_ix = Instruction {
-        program_id: crate::ID,
+        program_id: Pubkey::new(b"ov9EhgYsv4QZozmTrXx8jnkC7LESA5kaCsXqRg2d6NM"),
         accounts: vec![
             AccountMeta::new(subscription.key(), true),
             AccountMeta::new_readonly(app.key(), false),

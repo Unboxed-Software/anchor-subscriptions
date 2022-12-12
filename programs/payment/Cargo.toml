@@ -1,12 +1,12 @@
 [package]
-name = "plege"
+name = "payment"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "plege"
+name = "payment"
 
 [features]
 no-entrypoint = []
@@ -16,7 +16,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-chrono = { version = "0.4.23", default-features = false }
-anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
+anchor-lang = "0.25.0"
+plege = { path = "../plege", features = ["cpi"] }
+referrals = { path = "../referrals", features = ["cpi"] }
 anchor-spl = "0.25.0"
 clockwork-sdk = { version = "=1.3.9", features = ["thread"] }

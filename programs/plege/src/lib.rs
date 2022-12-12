@@ -7,7 +7,9 @@ pub mod state;
 use instructions::*;
 use state::Interval;
 
-declare_id!("2KiKoVaRF894axqfgEbuQhgHmNWbMY1fgC1NBEqQNu4c");
+use clockwork_sdk::ThreadResponse;
+
+declare_id!("CYQMznorG2nDLjPhn8UgR58zEnae8BM7G2xFZaxnoUSS");
 
 #[program]
 pub mod plege {
@@ -46,10 +48,6 @@ pub mod plege {
         subscription_bump: u8,
     ) -> Result<()> {
         instructions::close_subscription_account(ctx, subscription_bump)
-    }
-
-    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<ThreadResponse> {
-        instructions::complete_payment(ctx)
     }
 
     pub fn disallow_new_subscribers(ctx: Context<ToggleNewSubscribers>) -> Result<()> {
