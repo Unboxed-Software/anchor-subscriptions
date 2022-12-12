@@ -1,19 +1,22 @@
 import { BN, web3 } from "@project-serum/anchor"
+import { getProgram } from "../config/config"
 import { THREAD_PROGRAM } from "./constants"
+
+const program = getProgram()
 
 export function userAccountKeyFromPubkey(
   pubkey: web3.PublicKey
 ): web3.PublicKey {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("USER_META"), pubkey.toBuffer()],
-    global.program.programId
+    program.programId
   )[0]
 }
 
 export function findUserMetaAddress(pubkey: web3.PublicKey) {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("USER_META"), pubkey.toBuffer()],
-    global.program.programId
+    program.programId
   )
 }
 
@@ -27,7 +30,7 @@ export function appAccountKey(
       auth.toBuffer(),
       new BN(appId).toArrayLike(Buffer, "be", 1),
     ],
-    global.program.programId
+    program.programId
   )[0]
 }
 
@@ -60,7 +63,7 @@ export function tierAccountKey(
       app.toBuffer(),
       new BN(tierId).toArrayLike(Buffer, "be", 1),
     ],
-    global.program.programId
+    program.programId
   )[0]
 }
 
@@ -70,7 +73,7 @@ export function subscriptionAccountKey(
 ): [web3.PublicKey, number] {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
-    global.program.programId
+    program.programId
   )
 }
 
