@@ -1,0 +1,24 @@
+{
+    "name": "@plege/subscriptions",
+    "version": "0.0.1",
+    "description": "",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "files": [
+        "lib/**/*"
+    ],
+    "scripts": {
+        "dev": "nodemon test/index.ts",
+        "build": "tsc",
+        "start": "tsc -w"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/node-fetch": "^2.6.2"
+    },
+    "dependencies": {
+        "@project-serum/anchor": "^0.25.0"
+    }
+}
