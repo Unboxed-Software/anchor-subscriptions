@@ -1,13 +1,13 @@
 mod assertions;
 mod error;
-mod instructions;
-mod state;
+pub mod instructions;
+pub mod state;
 
 use anchor_lang::prelude::*;
 use instructions::*;
-use state::{PubkeyWithWeight, Splits8};
+use state::*;
 
-declare_id!("2kY5DJedxxDkGXohsSQh5kLNz4bpjEZ2YGVSrsgNQdG1");
+declare_id!("Dr5siFa8o6Q2rttbvDdKK9zjE7SrVWgK1UhWr5nur3v5");
 
 #[program]
 pub mod referrals {
@@ -28,8 +28,7 @@ pub mod referrals {
 
     pub fn split_payment<'info>(
         ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>,
-        tier_id: u8,
     ) -> Result<()> {
-        instructions::split_payment(ctx, tier_id)
+        instructions::split_payment(ctx)
     }
 }
