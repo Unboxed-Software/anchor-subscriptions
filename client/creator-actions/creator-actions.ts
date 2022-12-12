@@ -1,4 +1,4 @@
-import { web3 } from "@project-serum/anchor"
+import { BN, web3 } from "@project-serum/anchor"
 import { getProgram } from "../config/config"
 import {
   appAccountKey,
@@ -66,14 +66,14 @@ export async function createTier(
   tier: web3.PublicKey
 }> {
   if (!tierId) {
-    const appPDA = await program.account.App.fetch(app)
+    const appPDA = await program.account.app.fetch(app)
     tierId = (appPDA.numTiers as number) + 1
   }
 
   const tier = tierAccountKey(app, tierId)
 
   const instruction = await program.methods
-    .createTier(tierId, name, price, intervalValueInternal(interval))
+    .createTier(tierId, name, new BN(price), intervalValueInternal(interval)) // intervalValueInternal(interval))
     .accounts({
       app,
       signer: auth,
