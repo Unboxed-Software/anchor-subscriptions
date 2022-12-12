@@ -34,7 +34,7 @@ pub fn create_app(ctx: Context<CreateApp>, _app_id: u8, name: String) -> Result<
     let auth = &ctx.accounts.auth;
     let treasury = &ctx.accounts.treasury;
     let user_meta = &mut ctx.accounts.user_meta;
-    let mint = ctx.accounts.mint.clone();
+    let mint = ctx.accounts.mint.to_account_info();
 
     app.auth = *auth.to_account_info().key;
     app.name = name;

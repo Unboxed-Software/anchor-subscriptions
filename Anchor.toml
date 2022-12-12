@@ -3,7 +3,7 @@ seeds = true
 skip-lint = false
 
 [programs.devnet]
-plege = "2KiKoVaRF894axqfgEbuQhgHmNWbMY1fgC1NBEqQNu4c"
+plege = "4MHQj9xyrt9SDZiCt1awCLxveRYjdvGKTSftks7Uhxjb"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,4 +16,4 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha --require tests/utils/globalSetup.ts -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [workspace]
-types = "client/types/idl/"
+types = "client/src/types/idl/"

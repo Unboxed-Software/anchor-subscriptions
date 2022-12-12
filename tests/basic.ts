@@ -4,21 +4,23 @@ import {
   getAccount,
   mintToChecked,
 } from "@solana/spl-token"
-import { BN } from "@project-serum/anchor"
+import { BN, Program } from "@project-serum/anchor"
 import chai from "chai"
 import chaiAsPromised from "chai-as-promised"
 import {
+  appAccountKey,
   cancelSubscription,
   completePayment,
   createSubscription,
 } from "./utils/basic-functions"
+import { Plege } from "../target/types/plege"
 
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe("basic flow", () => {
+describe.only("basic flow", () => {
   it("creates user", async () => {
-    await global.program.methods
+    await program.methods
       .createUser()
       .accounts({
         auth: global.testKeypairs.colossal.publicKey,
@@ -28,7 +30,7 @@ describe("basic flow", () => {
   })
 
   it("creates app", async () => {
-    await global.program.methods
+    await program.methods
       .createApp(1, "Test App")
       .accounts({
         mint: global.mint,
@@ -38,7 +40,7 @@ describe("basic flow", () => {
       .signers([global.testKeypairs.colossal])
       .rpc()
 
-    const appPDA = await global.program.account.app.fetch(app)
+    const appPDA = await program.account.app.fetch(app)
     expect(appPDA.auth.toBase58()).to.equal(
       global.testKeypairs.colossal.publicKey.toBase58()
     )
@@ -46,8 +48,8 @@ describe("basic flow", () => {
   })
 
   it("create tier", async () => {
-    await global.program.methods
-      .createTier(new BN(1), "Test Tier", new BN(10), { month: {} })
+    await program.methods
+      .createTier(1, "Test Tier", new BN(10), { month: {} })
       .accounts({
         app,
         signer: global.testKeypairs.colossal.publicKey,
@@ -55,10 +57,10 @@ describe("basic flow", () => {
       .signers([global.testKeypairs.colossal])
       .rpc()
 
-    const tierPDA = await global.program.account.tier.fetch(tier)
+    const tierPDA = await program.account.tier.fetch(tier)
     expect(tierPDA.app.toBase58()).to.equal(app.toBase58())
     expect(tierPDA.price.toNumber()).to.equal(10)
-    expect(tierPDA.interval.month !== undefined)
+    expect((tierPDA.interval as any).month).to.not.equal(undefined)
   })
 
   it("create subscription", async () => {
@@ -69,7 +71,7 @@ describe("basic flow", () => {
       subscriberAta
     )
 
-    const subscriptionPDA = await global.program.account.subscription.fetch(
+    const subscriptionPDA = await program.account.subscription.fetch(
       subscription
     )
 
@@ -78,7 +80,7 @@ describe("basic flow", () => {
     expect(subscriptionPDA.subscriber.toBase58()).to.equal(
       global.testKeypairs.subscriber.publicKey.toBase58()
     )
-    const startTime = new Date(subscriptionPDA.start * 1000)
+    const startTime = new Date(subscriptionPDA.start.toNumber() * 1000)
     expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
     expect(subscriptionPDA.start.toNumber()).to.equal(
       subscriptionPDA.payPeriodExpiration.toNumber()
@@ -86,11 +88,11 @@ describe("basic flow", () => {
   })
 
   it("completes payment", async () => {
-    const before = await global.program.account.subscription.fetch(subscription)
+    const before = await program.account.subscription.fetch(subscription)
 
     await completePayment(app, tier, colossalAta, subscriberAta, subscription)
 
-    const subscriptionPDA = await global.program.account.subscription.fetch(
+    const subscriptionPDA = await program.account.subscription.fetch(
       subscription
     )
 
@@ -112,7 +114,7 @@ describe("basic flow", () => {
       subscriberAta
     )
 
-    const subscriptionPDA = await global.program.account.subscription.fetch(
+    const subscriptionPDA = await program.account.subscription.fetch(
       subscription
     )
     expect(subscriptionPDA.acceptNewPayments).to.equal(false)
@@ -162,13 +164,14 @@ describe("basic flow", () => {
   // })
 
   before(async () => {
+    program = global.program as Program<Plege>
     ;[app] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("APP"),
         global.testKeypairs.colossal.publicKey.toBuffer(),
         new BN([1]).toArrayLike(Buffer, "be", 1),
       ],
-      global.program.programId
+      program.programId
     )
     ;[tier] = anchor.web3.PublicKey.findProgramAddressSync(
       [
@@ -176,7 +179,7 @@ describe("basic flow", () => {
         app.toBuffer(),
         new BN([1]).toArrayLike(Buffer, "be", 1),
       ],
-      global.program.programId
+      program.programId
     )
     ;[subscription] = anchor.web3.PublicKey.findProgramAddressSync(
       [
@@ -184,7 +187,7 @@ describe("basic flow", () => {
         app.toBuffer(),
         global.testKeypairs.subscriber.publicKey.toBuffer(),
       ],
-      global.program.programId
+      program.programId
     )
 
     threadProgram = new anchor.web3.PublicKey(
@@ -230,13 +233,15 @@ describe("basic flow", () => {
       5
     )
   })
-})
 
-let colossalAta,
-  subscriberAta,
-  hackerAta,
-  app,
-  tier,
-  subscription,
-  thread,
-  threadProgram
+  let colossalAta,
+    subscriberAta,
+    hackerAta,
+    app,
+    tier,
+    subscription,
+    thread,
+    threadProgram
+
+  let program: Program<Plege>
+})

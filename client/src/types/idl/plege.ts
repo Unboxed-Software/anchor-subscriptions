@@ -578,10 +578,6 @@ export type Plege = {
             "type": "publicKey"
           },
           {
-            "name": "name",
-            "type": "string"
-          },
-          {
             "name": "numTiers",
             "type": "u8"
           },
@@ -592,6 +588,10 @@ export type Plege = {
           {
             "name": "mint",
             "type": "publicKey"
+          },
+          {
+            "name": "name",
+            "type": "string"
           }
         ]
       }
@@ -656,10 +656,6 @@ export type Plege = {
             "type": "publicKey"
           },
           {
-            "name": "name",
-            "type": "string"
-          },
-          {
             "name": "price",
             "type": "u64"
           },
@@ -676,6 +672,10 @@ export type Plege = {
           {
             "name": "active",
             "type": "bool"
+          },
+          {
+            "name": "name",
+            "type": "string"
           }
         ]
       }
@@ -1320,10 +1320,6 @@ export const IDL: Plege = {
             "type": "publicKey"
           },
           {
-            "name": "name",
-            "type": "string"
-          },
-          {
             "name": "numTiers",
             "type": "u8"
           },
@@ -1334,6 +1330,10 @@ export const IDL: Plege = {
           {
             "name": "mint",
             "type": "publicKey"
+          },
+          {
+            "name": "name",
+            "type": "string"
           }
         ]
       }
@@ -1398,10 +1398,6 @@ export const IDL: Plege = {
             "type": "publicKey"
           },
           {
-            "name": "name",
-            "type": "string"
-          },
-          {
             "name": "price",
             "type": "u64"
           },
@@ -1418,6 +1414,10 @@ export const IDL: Plege = {
           {
             "name": "active",
             "type": "bool"
+          },
+          {
+            "name": "name",
+            "type": "string"
           }
         ]
       }

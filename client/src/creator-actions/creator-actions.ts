@@ -138,9 +138,9 @@ export async function disableTier(
 function intervalValueInternal(interval: Interval): any {
   switch (interval) {
     case Interval.Monthly:
-      return { monthly: {} }
+      return { month: {} }
     case Interval.Yearly:
-      return { yearly: {} }
+      return { year: {} }
   }
 }
 
