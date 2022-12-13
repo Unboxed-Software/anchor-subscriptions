@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
 
-declare_id!("Dr5siFa8o6Q2rttbvDdKK9zjE7SrVWgK1UhWr5nur3v5");
+declare_id!("3QNdEFec1B1zQ7zv27t9cbkurXAN89UCXKy2jSFrPrLT");
 
 #[program]
 pub mod referrals {
@@ -22,8 +22,8 @@ pub mod referrals {
         instructions::create_referralship(ctx, app_id, referral_agent_split, splits)
     }
 
-    pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>, tier_id: u8) -> Result<()> {
-        instructions::subscribe_with_referral(ctx, tier_id)
+    pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()> {
+        instructions::subscribe_with_referral(ctx)
     }
 
     pub fn split_payment<'info>(

@@ -8,22 +8,25 @@ use crate::error::PlegeError;
 #[derive(Accounts)]
 pub struct CompletePayment<'info> {
     #[account(mut, 
-        // constraint = {msg!("subscription");subscription.expiration < Clock::get().unwrap().unix_timestamp},
+        has_one = tier
     )]
     pub subscription: Account<'info, Subscription>,
     #[account(mut)]
     pub app: Account<'info, App>,
     #[account(mut,
-        constraint = tier.app == app.key() && tier.key() == subscription.tier,
+        has_one = app,
         constraint = tier.active == true
     )]
     pub tier: Account<'info, Tier>,
     #[account(mut,
-        constraint = {msg!("destination"); destination.owner == app.treasury.key() && destination.mint == app.mint},
+        constraint = destination.owner == app.treasury.key(),
+        constraint = destination.mint == app.mint,
     )]
     pub destination: Account<'info, TokenAccount>,
-    #[account(mut, constraint = {msg!("subscriber_ata"); subscriber_ata.owner == subscription.subscriber.key()
-        && subscriber_ata.mint == app.mint && subscriber_ata.amount >= tier.price},
+    #[account(mut, 
+        constraint = subscriber_ata.owner == subscription.subscriber.key(),
+        constraint = subscriber_ata.mint == app.mint,
+        constraint = subscriber_ata.amount >= tier.price,
     )]
     pub subscriber_ata: Account<'info, TokenAccount>,
     #[account(

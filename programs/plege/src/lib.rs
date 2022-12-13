@@ -4,10 +4,11 @@ pub mod error;
 pub mod instructions;
 pub mod state;
 
+use clockwork_sdk::ThreadResponse;
 use instructions::*;
 use state::Interval;
 
-declare_id!("4MHQj9xyrt9SDZiCt1awCLxveRYjdvGKTSftks7Uhxjb");
+declare_id!("7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA");
 
 #[program]
 pub mod plege {

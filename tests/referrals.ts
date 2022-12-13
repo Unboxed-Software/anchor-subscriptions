@@ -13,7 +13,6 @@ import generateFundedKeypair from "./utils/keypair"
 import {
   findAppAddress,
   findSubscriptionAddress,
-  numberToAppId,
   tierAccountKey,
   userAccountKeyFromPubkey,
 } from "./utils/basic-functions"
@@ -157,6 +156,7 @@ describe("referrals", () => {
       .createApp(appId, "super app")
       .accounts({
         app: appAddress,
+        mint: treasuryMint,
         auth: appAuthorityKeypair.publicKey,
         userMeta: userMetaAddress,
         treasury: referralshipTreasuryAddress,
@@ -182,7 +182,6 @@ describe("referrals", () => {
       .accounts({
         tier: tierAddress,
         app: appAddress,
-        mint: treasuryMint,
         signer: appAuthorityKeypair.publicKey,
         systemProgram: SystemProgram.programId,
       })
@@ -294,7 +293,7 @@ describe("referrals", () => {
     )
 
     const subscribeWithReferralIx = await referralProgram.methods
-      .subscribeWithReferral(tierArgs.id)
+      .subscribeWithReferral()
       .accounts({
         referral: referralAddress,
         referralship: referralshipAddress,
@@ -352,7 +351,7 @@ describe("referrals", () => {
 
     // simulate a call from the subscription program to split payments
     let splitIx = await referralProgram.methods
-      .splitPayment(tierArgs.id)
+      .splitPayment()
       .accounts({
         app: appAddress,
         appAuthority: appAuthorityKeypair.publicKey,

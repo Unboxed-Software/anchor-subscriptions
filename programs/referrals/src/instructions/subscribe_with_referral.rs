@@ -25,7 +25,6 @@ use crate::{
 };
 
 #[derive(Accounts)]
-#[instruction(tier_id: u8)]
 pub struct SubscribeWithReferral<'info> {
     #[account(
         init,
@@ -72,9 +71,7 @@ pub struct SubscribeWithReferral<'info> {
     #[account(mut)]
     pub subscriber_token_account: Box<Account<'info, TokenAccount>>,
     #[account(
-        seeds = [SUBSCRIPTION_TIER.as_bytes(), app.key().as_ref(), tier_id.to_be_bytes().as_ref()],
-        seeds::program = plege_program.key(),
-        bump
+        has_one = app
     )]
     pub tier: Box<Account<'info, Tier>>,
     /// CHECK: not being used, only for seeds
@@ -89,7 +86,7 @@ pub struct SubscribeWithReferral<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>,  _tier_id: u8) -> Result<()> {
+pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()> {
     let referral = &mut ctx.accounts.referral;
     let referralship = &ctx.accounts.referralship;
     let referral_agent_nft_mint = &ctx.accounts.referral_agent_nft_mint;

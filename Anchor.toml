@@ -2,12 +2,9 @@
 seeds = true
 skip-lint = false
 
-[programs.localnet]
-referrals = "2kY5DJedxxDkGXohsSQh5kLNz4bpjEZ2YGVSrsgNQdG1"
-plege = "2KiKoVaRF894axqfgEbuQhgHmNWbMY1fgC1NBEqQNu4c"
 [programs.devnet]
-referrals = "2kY5DJedxxDkGXohsSQh5kLNz4bpjEZ2YGVSrsgNQdG1"
-plege = "4MHQj9xyrt9SDZiCt1awCLxveRYjdvGKTSftks7Uhxjb"
+referrals = "3QNdEFec1B1zQ7zv27t9cbkurXAN89UCXKy2jSFrPrLT"
+plege = "7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA"
 
 [registry]
 url = "https://api.apr.dev"
@@ -20,4 +17,4 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha --require tests/utils/globalSetup.ts -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [workspace]
-types = "client/src/types/idl/"
+types = "client/shared/idl/"

@@ -20,7 +20,6 @@ use crate::{
 };
 
 #[derive(Accounts)]
-#[instruction(tier_id: u8)]
 pub struct SplitPayment<'info> {
     #[account(
         seeds = [APP.as_bytes(), app_authority.key().as_ref(), referralship.app_id.to_be_bytes().as_ref()],
@@ -39,9 +38,8 @@ pub struct SplitPayment<'info> {
     /// CHECK: Just needs to be a system account.
     pub subscriber: UncheckedAccount<'info>,
     #[account(
-        seeds = [SUBSCRIPTION_TIER.as_bytes(), app.key().as_ref(), tier_id.to_be_bytes().as_ref()],
-        seeds::program = plege_program.key(),
-        bump
+        constraint = subscription.tier == tier.key(),
+        has_one = app
     )]
     pub tier: Box<Account<'info, Tier>>,
     #[account(
@@ -81,12 +79,8 @@ pub struct SplitPayment<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn split_payment<'info>(
-    ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>,
-    _tier_id: u8,
-) -> Result<()> {
+pub fn split_payment<'info>(ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>) -> Result<()> {
     let app = &ctx.accounts.app;
-    let subscription = &ctx.accounts.subscription;
     let tier = &ctx.accounts.tier;
     let referralship = &ctx.accounts.referralship;
     let referral_agent_nft_mint = &ctx.accounts.referral_agent_nft_mint;
@@ -151,7 +145,7 @@ pub fn split_payment<'info>(
     }
 
     // make sure the treasury mint matches what's stored in the tier
-    if treasury_mint.key() != tier.mint.key() {
+    if treasury_mint.key() != app.mint.key() {
         return Err(ReferralError::InvalidTreasuryMint.into());
     }
 

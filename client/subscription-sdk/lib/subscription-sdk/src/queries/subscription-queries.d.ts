@@ -1,0 +1,12 @@
+import { web3 } from "@project-serum/anchor";
+export declare function getAllSubscriptionsToApp(app: web3.PublicKey): Promise<import("../types/interfaces").Subscription[]>;
+export declare function getAllActiveSubscriptionsToApp(app: web3.PublicKey): Promise<import("../types/interfaces").Subscription[]>;
+export declare function getAllSubscriptionsToTier(tier: web3.PublicKey): Promise<import("../types/interfaces").Subscription[]>;
+export declare function getAllActiveSubscriptionsToTier(tier: web3.PublicKey): Promise<import("../types/interfaces").Subscription[]>;
+export declare function getActiveSubscriptionCountForTier(tier: web3.PublicKey): Promise<number>;
+export declare function getActiveSubscriptionCountForApp(app: web3.PublicKey): Promise<number>;
+export declare function getActiveSubscriptionsToAppGroupedByTier(app: web3.PublicKey): Promise<{}>;
+export declare function getAllSubscriptionsForUser(user: web3.PublicKey): Promise<import("../types/interfaces").Subscription[]>;
+export declare function getActiveSubscriptionsForUser(user: web3.PublicKey): Promise<import("../types/interfaces").Subscription[]>;
+export declare function isActiveSubscriber(subscriber: web3.PublicKey, app: web3.PublicKey, tier?: web3.PublicKey | null): Promise<boolean>;
+export declare function getSubscription(subscriber: web3.PublicKey, app: web3.PublicKey): Promise<import("../types/interfaces").Subscription>;

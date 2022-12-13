@@ -8,7 +8,6 @@ import { BN, Program } from "@project-serum/anchor"
 import chai from "chai"
 import chaiAsPromised from "chai-as-promised"
 import {
-  appAccountKey,
   cancelSubscription,
   completePayment,
   createSubscription,
@@ -35,7 +34,7 @@ describe.only("basic flow", () => {
       .accounts({
         mint: global.mint,
         auth: global.testKeypairs.colossal.publicKey,
-        treasury: global.testKeypairs.colossal.publicKey,
+        treasury: global.testKeypairs.hacker.publicKey,
       })
       .signers([global.testKeypairs.colossal])
       .rpc()
@@ -89,13 +88,13 @@ describe.only("basic flow", () => {
   it("completes payment", async () => {
     const before = await program.account.subscription.fetch(subscription)
 
-    await completePayment(app, tier, colossalAta, subscriberAta, subscription)
+    await completePayment(app, tier, hackerAta, subscriberAta, subscription)
 
     const subscriptionPDA = await program.account.subscription.fetch(
       subscription
     )
 
-    const ownerATA = await getAccount(global.connection, colossalAta)
+    const ownerATA = await getAccount(global.connection, hackerAta)
 
     let payPeriod = new Date(before.payPeriodExpiration.toNumber() * 1000)
     payPeriod.setMonth(payPeriod.getMonth() + 1)

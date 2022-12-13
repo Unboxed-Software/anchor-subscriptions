@@ -267,7 +267,7 @@ export async function completePayment(
     .accounts({
       app,
       tier,
-      destination: destination,
+      destination,
       subscriberAta,
       subscription,
       subscriptionThread: thread,
