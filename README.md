@@ -4,6 +4,10 @@ Plege is a Solana-based payments provider dedicated to reaching Web2 feature par
 
 The program is written using Rust and Anchor. Its payment automation works using [clockwork threads](https://docs.clockwork.xyz/about/readme), thus eliminating any reliance on client-side automation.
 
+The program is currently live on Devnet with program Id `7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA`.
+
+We will be live on Mainnet-beta shortly.
+
 ## Interacting with the Subscriptions Program
 
 The easiest way to interact with the subscriptions is using the [Typescript SDK](./client/subscription-sdk/).
@@ -54,3 +58,11 @@ This namespace surfaces the following:
 * `disable` - permanently disables a tier. Note that this makes it so no new subscribers can subscribe to this tier and also terminates all existing subscriptions to that tier.
 * `get.subscriptions.all` - gets all active subscriptions to a given tier
 * `get.subscriptions.count` - gets a count of all active subscriptions to a given tier
+
+## Referral program
+
+In addition to our subscription program, we've created a referral program that builds on top of our subscription program. This program allows merchants to split payments among multiple parties, one of which is a "referral agent."
+
+While this can be flexible, you can think of a referral agent as a brand ambassador who receives "commission" for making a sale. In Web2, it's like giving a podcaster a referral code it share with listeners. When a listener uses the referral code to subscribe, the podcaster gets a cut.
+
+This program will be released with the week.
