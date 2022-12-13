@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTierCountForApp = exports.getAllTiersForApp = void 0;
+exports.fetchTier = exports.getTierCountForApp = exports.getAllTiersForApp = void 0;
 var config_1 = require("../config/config");
 var conversions_1 = require("../../../shared/utils/conversions");
 var program = (0, config_1.getProgram)();
@@ -70,3 +70,17 @@ function getTierCountForApp(app) {
     });
 }
 exports.getTierCountForApp = getTierCountForApp;
+function fetchTier(tier) {
+    return __awaiter(this, void 0, void 0, function () {
+        var tierAccount;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, program.account.tier.fetch(tier)];
+                case 1:
+                    tierAccount = _a.sent();
+                    return [2 /*return*/, (0, conversions_1.convertTier)(tierAccount, tier)];
+            }
+        });
+    });
+}
+exports.fetchTier = fetchTier;

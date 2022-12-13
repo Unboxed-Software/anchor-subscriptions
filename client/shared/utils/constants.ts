@@ -9,5 +9,5 @@ export const SUBSCRIPTION_PROGRAM_ID = new web3.PublicKey(
 )
 
 export const REFERRAL_PROGRAM_ID = new web3.PublicKey(
-  "3QNdEFec1B1zQ7zv27t9cbkurXAN89UCXKy2jSFrPrLT"
+  "AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC"
 )

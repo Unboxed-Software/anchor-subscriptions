@@ -52,7 +52,7 @@ function subscribeToTier(subscriber, subscriberAta, app, tier, appTreasury) {
                     return [4 /*yield*/, program.methods
                             .createSubscription()
                             .accounts({
-                            threadProgram: constants_1.THREAD_PROGRAM,
+                            threadProgram: constants_1.THREAD_PROGRAM_ID,
                             subscriptionThread: thread,
                             app: app,
                             tier: tier,
@@ -101,7 +101,7 @@ function cancelSubscription(app, tier, subscriber, subscriberAta) {
                             subscriber: subscriber,
                             subscriberAta: subscriberAta,
                             subscriptionThread: thread,
-                            threadProgram: constants_1.THREAD_PROGRAM,
+                            threadProgram: constants_1.THREAD_PROGRAM_ID,
                         })
                             .instruction()];
                 case 1:
@@ -127,7 +127,7 @@ function closeSubscriptionAccount(app, subscriber) {
                             subscription: subscription,
                             subscriber: subscriber,
                             subscriptionThread: thread,
-                            threadProgram: constants_1.THREAD_PROGRAM,
+                            threadProgram: constants_1.THREAD_PROGRAM_ID,
                         })
                             .instruction()];
                 case 1:
@@ -155,7 +155,7 @@ function switchSubscriptionTier(oldTier, newTier, app, subscriber, subscriberAta
                             subscriber: subscriber,
                             subscriberAta: subscriberAta,
                             subscriptionThread: thread,
-                            threadProgram: constants_1.THREAD_PROGRAM,
+                            threadProgram: constants_1.THREAD_PROGRAM_ID,
                         })
                             .instruction()];
                 case 1:

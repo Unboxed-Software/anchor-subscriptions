@@ -20,6 +20,8 @@ import {
   getTierCountForApp,
 } from "./queries/tier-queries"
 import { fetchUser } from "./queries/user-queries"
+import { createReferralApp } from "../../referral-sdk/src/createReferralApp"
+import { subscribeWithReferral } from "../../referral-sdk/src/subscribeWithReferral"
 
 export const user = {
   create: createUser,
@@ -28,6 +30,8 @@ export const user = {
 
 export const app = {
   create: createApp,
+  createWithReferralship: createReferralApp,
+  subscribeWithReferral: subscribeWithReferral,
   get: {
     subscriptions: {
       all: getAllActiveSubscriptionsToApp,

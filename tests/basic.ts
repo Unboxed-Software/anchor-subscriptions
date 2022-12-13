@@ -17,7 +17,7 @@ import { Plege } from "../target/types/plege"
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe.only("basic flow", () => {
+describe("basic flow", () => {
   it("creates user", async () => {
     await program.methods
       .createUser()

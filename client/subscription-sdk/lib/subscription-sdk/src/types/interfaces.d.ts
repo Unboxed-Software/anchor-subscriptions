@@ -25,6 +25,9 @@ export interface App {
     pubkey: web3.PublicKey;
     auth: web3.PublicKey;
     numTiers: number;
+    treasury: web3.PublicKey;
+    mint: web3.PublicKey;
+    name: string;
 }
 export interface User {
     pubkey: web3.PublicKey;

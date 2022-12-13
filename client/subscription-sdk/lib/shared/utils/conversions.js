@@ -35,6 +35,9 @@ function convertApp(app, pubkey) {
         pubkey: pubkey,
         auth: app.auth,
         numTiers: app.numTiers,
+        mint: app.mint,
+        treasury: app.treasury,
+        name: app.name,
     };
 }
 exports.convertApp = convertApp;

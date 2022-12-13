@@ -3,7 +3,7 @@ seeds = true
 skip-lint = false
 
 [programs.devnet]
-referrals = "3QNdEFec1B1zQ7zv27t9cbkurXAN89UCXKy2jSFrPrLT"
+referrals = "AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC"
 plege = "7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA"
 
 [registry]

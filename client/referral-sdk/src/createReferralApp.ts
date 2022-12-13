@@ -1,11 +1,8 @@
 import { getProgram } from "./config/config"
 import { web3 } from "@project-serum/anchor"
-import {
-  appAccountKey,
-  userAccountKeyFromPubkey,
-} from "../../shared/utils/pda-derivations"
+import { appAccountKey } from "../../shared/utils/pda-derivations"
 import { SUBSCRIPTION_PROGRAM_ID } from "../../shared/utils/constants"
-import { app, user } from "../../subscription-sdk/src"
+import { app as App } from "../../subscription-sdk/src"
 import {
   findReferralshipAddress,
   findReferralshipTreasuryAccountAddress,
@@ -17,14 +14,12 @@ const program = getProgram()
 export async function createReferralApp(
   name: string,
   auth: web3.PublicKey,
+  appId: number,
   treasuryMint: web3.PublicKey,
   referralPercent: number,
   additionalSplits: { address: web3.PublicKey; weight: number }[],
   referralCollectionNFTMint: web3.PublicKey
 ) {
-  const userKey = userAccountKeyFromPubkey(auth)
-  const userAccount = await user.fetch(userKey)
-  const appId = (userAccount.numApps as number) + 1
   const appKey = appAccountKey(auth, appId)
 
   const metaplex = Metaplex.make(program.provider.connection)
@@ -38,12 +33,23 @@ export async function createReferralApp(
     program.programId
   )
 
-  const { instruction: createAppIx, app: newApp } = await app.create(
-    name,
-    auth,
-    treasuryMint,
-    treasury
-  )
+  let createAppIx, newApp
+  try {
+    console.log(treasuryMint.toString())
+    console.log(treasury.toString())
+    const { instruction, app } = await App.create(
+      name,
+      auth,
+      treasuryMint,
+      treasury,
+      appId
+    )
+
+    createAppIx = instruction
+    newApp = app
+  } catch (error) {
+    console.log("WHETE", error)
+  }
 
   const [referralshipAddress] = findReferralshipAddress(
     appKey,
@@ -66,6 +72,6 @@ export async function createReferralApp(
 
   return {
     instructions: [createAppIx, enableReferralsIx],
-    app: app,
+    app: newApp,
   }
 }

@@ -1,8 +1,8 @@
 import { BN, web3 } from "@project-serum/anchor"
-import { getProgram } from "../../subscription-sdk/src/config/config"
-import { THREAD_PROGRAM } from "./constants"
+import { getProgram as getSubscriptionProgram } from "../../subscription-sdk/src/config/config"
+import { THREAD_PROGRAM_ID as THREAD_PROGRAM } from "./constants"
 
-const program = getProgram()
+const program = getSubscriptionProgram()
 
 export function userAccountKeyFromPubkey(
   pubkey: web3.PublicKey

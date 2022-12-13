@@ -50,7 +50,7 @@ function subscriptionThreadKey(subscription) {
         Buffer.from("thread"),
         subscription.toBuffer(),
         Buffer.from("subscriber_thread"),
-    ], constants_1.THREAD_PROGRAM)[0];
+    ], constants_1.THREAD_PROGRAM_ID)[0];
 }
 exports.subscriptionThreadKey = subscriptionThreadKey;
 function findSubscriptionAddress(subscriber, app, programId) {

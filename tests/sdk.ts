@@ -1,8 +1,10 @@
 import { expect } from "chai"
+import * as anchor from "@project-serum/anchor"
 import { web3 } from "@project-serum/anchor"
 import {
   createGeneralScaffolding,
   createSubscription,
+  tierAccountKey,
 } from "./utils/basic-functions"
 import { createAssociatedTokenAccount, createMint } from "@solana/spl-token"
 import {
@@ -10,11 +12,27 @@ import {
   subscribeWithReferral,
 } from "../client/referral-sdk/src"
 import generateFundedKeypair from "./utils/keypair"
+import { app } from "../client/subscription-sdk/src"
+import { Metaplex } from "@metaplex-foundation/js"
 
 describe("sdk tests", () => {
-  // it.only("random test", async () => {
-  //   sdk.setup(global.connection, global.program.programId)
+  it("subscription", async () => {
+    const metaplex = Metaplex.make(global.connection)
+    const nft = await metaplex.nfts().findByMint({
+      mintAddress: new web3.PublicKey(
+        "3UUhgaJbCRd95HjuD7tSBdRBqKJCPhBFcaVBQktLPa9E"
+      ),
+    })
 
+    console.log(nft.collection.address.toBase58())
+
+    const subs = await app.get.subscriptions.all(
+      new web3.PublicKey("71XJV5xrYDog4frZaqv7eJ6R4L6NKHdnTk9nD9psfvmF")
+    )
+
+    console.log(subs)
+  })
+  // it.only("random test", async () => {
   //   const subscriber = web3.Keypair.generate()
   //   let subscriberAta = await createAssociatedTokenAccount(
   //     global.connection,
@@ -23,21 +41,16 @@ describe("sdk tests", () => {
   //     subscriber.publicKey
   //   )
   //   await createSubscription(app, tier1, subscriber, subscriberAta)
-  //   const count = await sdk.getActiveSubscriptionCountForApp(
+  //   const count = await app.queries.getAllSubscriptionsToApp sdk.getActiveSubscriptionCountForApp(
   //     new web3.PublicKey("FZ3LyWWrorXTfNHp6v4tncoN7iojo1Dud9YofPizwycB")
   //   )
-
   //   const subscriptions = await sdk.getSubscriptionsToApp(
   //     new web3.PublicKey("FZ3LyWWrorXTfNHp6v4tncoN7iojo1Dud9YofPizwycB")
   //   )
-
   //   expect(count).to.equal(2)
   // })
-
-  it("whatever", async () => {
-    const auth = await generateFundedKeypair(global.connection)
-    const split1 = web3.Keypair.generate()
-    const split2 = web3.Keypair.generate()
+  it.only("whatever", async () => {
+    const split1 = global.testKeypairs.colossal
 
     const mint = await createMint(
       global.connection,
@@ -46,21 +59,44 @@ describe("sdk tests", () => {
       auth.publicKey,
       0
     )
-
-    const { instructions, app } = await createReferralApp(
+    const { instructions, app: newApp } = await createReferralApp(
       "great app",
       auth.publicKey,
+      2,
       mint,
       20,
-      [{ address: split1.publicKey, weight: 10 }],
+      [{ address: split1.publicKey, weight: 80 }],
       new web3.PublicKey("GnRPQpETZ2rsDKxxXVPgwjChcp1i1kh6FpvLZupS7ndR")
     )
-
     const tx = new web3.Transaction()
     tx.add(instructions[0]).add(instructions[1])
+    await global.program.provider.sendAndConfirm(tx, [auth])
 
-    await global.connection.sendAndConfirm(tx, [auth])
+    const tx2 = new web3.Transaction()
+    tx2.add(
+      await global.program.methods.createTier(1, "test", new anchor.BN(10), {
+        month: {},
+      })
+    )
+
+    const tierKey = tierAccountKey(newApp, 1)
+
+    const { instruction } = await subscribeWithReferral(
+      split1.publicKey,
+      tierKey,
+      new web3.PublicKey("3UUhgaJbCRd95HjuD7tSBdRBqKJCPhBFcaVBQktLPa9E")
+    )
+
+    tx2.add(instruction)
+
+    await global.program.provider.sendAndConfirm(tx2, [split1])
   })
+
+  beforeEach(async () => {
+    ;({ user, app, tier1, auth } = await createGeneralScaffolding())
+  })
+
+  let user, app, tier1, auth
 })
 // ;(async () => {
 //   const subscriptions = await sdk.app.get.subscriptions.all(

@@ -36,21 +36,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchUser = void 0;
+exports.fetchApp = void 0;
 var conversions_1 = require("../../../shared/utils/conversions");
 var config_1 = require("../config/config");
 var program = (0, config_1.getProgram)();
-function fetchUser(userKey) {
+function fetchApp(appKey) {
     return __awaiter(this, void 0, void 0, function () {
-        var user;
+        var app;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, program.account.userMeta.fetch(userKey)];
+                case 0: return [4 /*yield*/, program.account.app.fetch(appKey)];
                 case 1:
-                    user = _a.sent();
-                    return [2 /*return*/, (0, conversions_1.convertUser)(user, userKey)];
+                    app = _a.sent();
+                    return [2 /*return*/, (0, conversions_1.convertApp)(app, appKey)];
             }
         });
     });
 }
-exports.fetchUser = fetchUser;
+exports.fetchApp = fetchApp;

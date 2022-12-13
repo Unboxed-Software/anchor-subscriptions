@@ -120,9 +120,9 @@ pub fn create_referralship(
     }
 
     // make sure the metadata is for a collection NFT
-    if collection_metadata.collection_details.is_none() {
-        return Err(ReferralError::InvalidCollectionMetadata.into());
-    }
+    // if collection_metadata.collection_details.is_none() {
+    //     return Err(ReferralError::InvalidCollectionMetadata.into());
+    // }
 
     // set referralship state
     referralship.app = app.key();

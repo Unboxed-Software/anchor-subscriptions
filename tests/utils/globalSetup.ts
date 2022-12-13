@@ -27,7 +27,7 @@ exports.mochaGlobalSetup = async function () {
 async function setTestKeypairs() {
   global.testKeypairs = {
     colossal: await generateFundedKeypair(connection),
-    subscriber: await generateFundedKeypair(connection), //keypairs[1],
-    hacker: await generateFundedKeypair(connection), //keypairs[2],
+    // subscriber: await generateFundedKeypair(connection), //keypairs[1],
+    // hacker: await generateFundedKeypair(connection), //keypairs[2],
   }
 }
