@@ -565,6 +565,71 @@ export type Plege = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "registerCallback",
+      "accounts": [
+        {
+          "name": "app",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "APP"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "auth"
+              },
+              {
+                "kind": "arg",
+                "type": "u8",
+                "path": "app_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "userMeta",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "USER_META"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "auth"
+              }
+            ]
+          }
+        },
+        {
+          "name": "auth",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "appId",
+          "type": "u8"
+        },
+        {
+          "name": "callback",
+          "type": {
+            "defined": "Callback"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -592,6 +657,14 @@ export type Plege = {
           {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "callback",
+            "type": {
+              "option": {
+                "defined": "Callback"
+              }
+            }
           }
         ]
       }
@@ -698,6 +771,58 @@ export type Plege = {
     }
   ],
   "types": [
+    {
+      "name": "Callback",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programId",
+            "type": "publicKey"
+          },
+          {
+            "name": "accounts",
+            "type": {
+              "vec": {
+                "defined": "AccountMetaBorsh"
+              }
+            }
+          },
+          {
+            "name": "ixData",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "ixName",
+            "type": {
+              "option": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AccountMetaBorsh",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
     {
       "name": "Interval",
       "type": {
@@ -1307,6 +1432,71 @@ export const IDL: Plege = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "registerCallback",
+      "accounts": [
+        {
+          "name": "app",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "APP"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "auth"
+              },
+              {
+                "kind": "arg",
+                "type": "u8",
+                "path": "app_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "userMeta",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "USER_META"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "auth"
+              }
+            ]
+          }
+        },
+        {
+          "name": "auth",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "appId",
+          "type": "u8"
+        },
+        {
+          "name": "callback",
+          "type": {
+            "defined": "Callback"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1334,6 +1524,14 @@ export const IDL: Plege = {
           {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "callback",
+            "type": {
+              "option": {
+                "defined": "Callback"
+              }
+            }
           }
         ]
       }
@@ -1440,6 +1638,58 @@ export const IDL: Plege = {
     }
   ],
   "types": [
+    {
+      "name": "Callback",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programId",
+            "type": "publicKey"
+          },
+          {
+            "name": "accounts",
+            "type": {
+              "vec": {
+                "defined": "AccountMetaBorsh"
+              }
+            }
+          },
+          {
+            "name": "ixData",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "ixName",
+            "type": {
+              "option": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AccountMetaBorsh",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
     {
       "name": "Interval",
       "type": {

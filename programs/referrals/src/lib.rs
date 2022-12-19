@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
 
-declare_id!("AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC");
+declare_id!("2Mv4SLASEdH47uUB73n4Ft13ufzJoS2jomis27kqfLyW");
 
 #[program]
 pub mod referrals {

@@ -1,6 +1,9 @@
 use crate::error::PlegeError;
 use crate::state::*;
-use anchor_lang::prelude::*;
+use anchor_lang::{
+    prelude::*,
+    solana_program::program::invoke
+};
 use anchor_spl::token::Mint;
 
 #[derive(Accounts)]

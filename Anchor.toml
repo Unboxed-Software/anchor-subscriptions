@@ -3,18 +3,21 @@ seeds = true
 skip-lint = false
 
 [programs.devnet]
-referrals = "AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC"
-plege = "7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA"
+#referrals = "AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC"
+#plege = "7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA"
+plege = "Azgaa8wDLxi3udwmoz8CMt1Y4wqcRcVxNM2kfg4Vp5H4"
+referrals = "2Mv4SLASEdH47uUB73n4Ft13ufzJoS2jomis27kqfLyW"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha --require tests/utils/globalSetup.ts -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+#test = "yarn run ts-mocha --require tests/utils/globalSetup.ts -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/unit-tests/callback-unit-test.ts"
 
 [workspace]
 types = "client/shared/idl/"

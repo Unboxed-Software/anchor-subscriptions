@@ -6,9 +6,9 @@ pub mod state;
 
 use clockwork_sdk::ThreadResponse;
 use instructions::*;
-use state::Interval;
+use state::{Interval, Callback};
 
-declare_id!("7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA");
+declare_id!("Azgaa8wDLxi3udwmoz8CMt1Y4wqcRcVxNM2kfg4Vp5H4");
 
 #[program]
 pub mod plege {
@@ -67,5 +67,9 @@ pub mod plege {
 
     pub fn switch_subscription_tier(ctx: Context<SwitchSubscriptionTier>) -> Result<()> {
         instructions::switch_subscription_tier(ctx)
+    }
+
+    pub fn register_callback(ctx: Context<RegisterCallback>, app_id: u8, callback: Callback) -> Result<()> {
+        instructions::register_callback(ctx, app_id, callback)
     }
 }
