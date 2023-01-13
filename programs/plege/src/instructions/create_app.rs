@@ -11,7 +11,7 @@ use anchor_spl::token::Mint;
 pub struct CreateApp<'info> {
     #[account(init,
         payer = auth,
-        space = 8 + std::mem::size_of::<App>(),
+        space = 8 + std::mem::size_of::<App>() + DEFAULT_CALLBACK_SIZE,
         seeds = ["APP".as_bytes(), auth.key().as_ref(), app_id.to_be_bytes().as_ref()],
         bump
     )]

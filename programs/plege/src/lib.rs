@@ -49,7 +49,7 @@ pub mod plege {
         instructions::close_subscription_account(ctx, subscription_bump)
     }
 
-    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<ThreadResponse> {
+    pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<ThreadResponse> {
         instructions::complete_payment(ctx)
     }
 

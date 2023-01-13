@@ -26,15 +26,16 @@ pub struct AccountMetaBorsh {
     pub is_writable: bool,
 }
 
+pub static DEFAULT_CALLBACK_SIZE: usize = 32 + 34 * 13 + 2 + 10;
+
 impl Callback {
-    pub fn construct_callback(&self, payer: Pubkey) -> Instruction {
-        let mut accounts_meta_vec = vec![AccountMeta::new(payer, true)];
-        for account in &self.accounts {
-            if account.is_writable {
-                accounts_meta_vec.push(AccountMeta::new(account.pubkey, account.is_signer));
-            } else {
-                accounts_meta_vec.push(AccountMeta::new_readonly(account.pubkey, account.is_signer));
-            }
+    pub fn construct_callback(&self, dynamic_accounts: Option<Vec<AccountMeta>>) -> Instruction {
+        //let mut accounts_meta_vec = vec![AccountMeta::new(payer, true)];
+        let mut accounts_meta_vec = vec![];
+        accounts_meta_vec = self.add_account_meta_borsh_vec(accounts_meta_vec, &self.accounts);
+
+        if let Some(dynamic_accounts) = dynamic_accounts {
+            accounts_meta_vec = self.add_dynamic_account_meta(accounts_meta_vec, &dynamic_accounts);
         }
 
         let mut ix_data: Vec<u8> = vec![];
@@ -62,5 +63,34 @@ impl Callback {
             &anchor_lang::solana_program::hash::hash(preimage.as_bytes()).to_bytes()[..8],
         );
         sighash
+    }
+
+    pub fn add_account_meta_borsh_vec(&self, mut accounts_meta_vec: Vec<AccountMeta>, accounts_meta_borsh: &Vec<AccountMetaBorsh>) -> Vec<AccountMeta> {
+        for account in accounts_meta_borsh {
+            if account.is_writable {
+                accounts_meta_vec.push(AccountMeta::new(account.pubkey, account.is_signer));
+            } else {
+                accounts_meta_vec.push(AccountMeta::new_readonly(account.pubkey, account.is_signer));
+            }
+        }
+
+        accounts_meta_vec
+    }
+
+    pub fn add_dynamic_account_meta(&self, mut accounts_meta_vec: Vec<AccountMeta>, dynamic_accounts: &Vec<AccountMeta>) -> Vec<AccountMeta> {
+        for account in dynamic_accounts {
+            accounts_meta_vec.push(account.clone())
+        }
+
+        accounts_meta_vec
+    }
+
+    pub fn callback_size(&self) -> usize {
+
+        let accounts_meta_size: usize = 34 * self.accounts.len();
+        //let ix_data_len: usize = self.ix_data.unwrap().len();
+        let ix_name_size: usize = self.ix_name.as_ref().unwrap().len();
+
+        32 + accounts_meta_size + 2 + 1 + ix_name_size
     }
 }

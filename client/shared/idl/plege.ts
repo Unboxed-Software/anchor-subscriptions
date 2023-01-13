@@ -594,25 +594,6 @@ export type Plege = {
           }
         },
         {
-          "name": "userMeta",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "USER_META"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "auth"
-              }
-            ]
-          }
-        },
-        {
           "name": "auth",
           "isMut": true,
           "isSigner": true
@@ -1456,25 +1437,6 @@ export const IDL: Plege = {
                 "kind": "arg",
                 "type": "u8",
                 "path": "app_id"
-              }
-            ]
-          }
-        },
-        {
-          "name": "userMeta",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "USER_META"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "auth"
               }
             ]
           }
