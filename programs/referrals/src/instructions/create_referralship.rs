@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use mpl_token_metadata::{
     assertions::assert_owned_by,
-    state::{CollectionDetails, Metadata, TokenMetadataAccount},
+    state::{Metadata, TokenMetadataAccount},
 };
 use plege::{program::Plege, state::App};
 

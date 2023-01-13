@@ -310,16 +310,6 @@ export type Referrals = {
           "isSigner": false
         },
         {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1064,16 +1054,6 @@ export const IDL: Referrals = {
         },
         {
           "name": "plegeProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
           "isMut": false,
           "isSigner": false
         },

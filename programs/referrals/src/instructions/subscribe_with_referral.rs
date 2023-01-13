@@ -10,18 +10,12 @@ use mpl_token_metadata::{
 use plege::{
     cpi::accounts::CreateSubscription,
     program::Plege,
-    state::{App, Subscription, Tier},
+    state::{App, Tier},
 };
-
-use clockwork_sdk::thread_program::{
-        self,
-        accounts::{Thread, Trigger},
-        ThreadProgram,
-    };
 
 use crate::{
     error::ReferralError,
-    state::{Referral, Referralship, REFERRAL, APP, REFERRALSHIP, SUBSCRIPTION_TIER, TREASURY},
+    state::{Referral, Referralship, REFERRAL, APP, REFERRALSHIP},
 };
 
 #[derive(Accounts)]
@@ -77,11 +71,6 @@ pub struct SubscribeWithReferral<'info> {
     /// CHECK: not being used, only for seeds
     pub app_authority: UncheckedAccount<'info>,
     pub plege_program: Program<'info, Plege>,
-    /// CHECK: checked via PDA derivation
-    #[account(mut, address = Thread::pubkey(subscription.key(),"subscriber_thread".to_string()))]
-    pub subscription_thread: UncheckedAccount<'info>,
-    #[account(address = thread_program::ID)]
-    pub thread_program: Program<'info, ThreadProgram>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
@@ -102,8 +91,6 @@ pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()
     let plege_program = &ctx.accounts.plege_program;
     let token_program = &ctx.accounts.token_program;
     let system_program = &ctx.accounts.system_program;
-    let subscription_thread = ctx.accounts.subscription_thread.to_account_info();
-    let thread_program = ctx.accounts.thread_program.to_account_info();
 
     // make sure the treasury mint matches what's stored in the referralship.
     if treasury_mint.key() != referralship.treasury_mint.key() {
@@ -176,8 +163,6 @@ pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()
         subscription: subscription.to_account_info(),
         subscriber: subscriber.to_account_info(),
         subscriber_ata: subscriber_token_account.to_account_info(),
-        subscription_thread: subscription_thread.to_account_info(),
-        thread_program: thread_program.to_account_info(),
         token_program: token_program.to_account_info(),
         system_program: system_program.to_account_info(),
     };

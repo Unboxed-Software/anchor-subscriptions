@@ -4,7 +4,7 @@ use anchor_lang::{prelude::*, solana_program::program_pack::Pack};
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use mpl_token_metadata::{
     assertions::assert_owned_by,
-    state::{CollectionDetails, Metadata, TokenMetadataAccount},
+    state::{Metadata, TokenMetadataAccount},
 };
 use plege::{
     program::Plege,
@@ -13,10 +13,7 @@ use plege::{
 
 use crate::{
     error::ReferralError,
-    state::{
-        Referral, Referralship, Splits8, APP, REFERRAL, REFERRALSHIP, SUBSCRIPTION,
-        SUBSCRIPTION_TIER, TREASURY,
-    },
+    state::{Referral, Referralship, Splits8, APP, REFERRAL, REFERRALSHIP, SUBSCRIPTION, TREASURY},
 };
 
 #[derive(Accounts)]

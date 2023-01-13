@@ -2,10 +2,6 @@ use crate::error::PlegeError;
 use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{approve, Approve, Token, TokenAccount};
-use clockwork_sdk::thread_program::{
-    accounts::{Thread, ThreadSettings, Trigger},
-    ThreadProgram,
-};
 
 #[derive(Accounts)]
 pub struct SwitchSubscriptionTier<'info> {
@@ -34,27 +30,16 @@ pub struct SwitchSubscriptionTier<'info> {
       constraint = subscriber_ata.mint == app.mint && subscriber_ata.owner == subscriber.key() && subscriber_ata.amount >= new_tier.price,
     )]
     pub subscriber_ata: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = subscription_thread.authority == subscription.key(),
-        constraint = subscription_thread.id == "subscriber_thread"
-    )]
-    pub subscription_thread: Box<Account<'info, Thread>>,
-    pub thread_program: Program<'info, ThreadProgram>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
 pub fn switch_subscription_tier(ctx: Context<SwitchSubscriptionTier>) -> Result<()> {
-    let app = &ctx.accounts.app;
     let old_tier = &ctx.accounts.old_tier;
     let new_tier = &ctx.accounts.new_tier;
     let subscriber = &mut ctx.accounts.subscriber.to_account_info();
     let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
-    let system_program = ctx.accounts.system_program.to_account_info();
-    let thread_program = ctx.accounts.thread_program.to_account_info();
-    let subscription_thread = &ctx.accounts.subscription_thread;
 
     let subscription = &mut ctx.accounts.subscription;
 
@@ -88,32 +73,6 @@ pub fn switch_subscription_tier(ctx: Context<SwitchSubscriptionTier>) -> Result<
     };
     let approve_ctx = CpiContext::new(token_program.clone(), approve_accounts);
     approve(approve_ctx, approve_amount)?;
-
-    clockwork_sdk::thread_program::cpi::thread_update(
-        CpiContext::new_with_signer(
-            thread_program,
-            clockwork_sdk::thread_program::cpi::accounts::ThreadUpdate {
-                authority: subscription.to_account_info(),
-                thread: subscription_thread.to_account_info(),
-                system_program: system_program,
-            },
-            &[&[
-                "SUBSCRIPTION".as_bytes(),
-                app.key().as_ref(),
-                subscriber.key().as_ref(),
-                &[subscription.bump],
-            ]],
-        ),
-        ThreadSettings {
-            fee: None,
-            kickoff_instruction: None,
-            rate_limit: None,
-            trigger: Some(Trigger::Cron {
-                schedule: new_tier.interval.cron_schedule(now_timestamp).clone(),
-                skippable: false,
-            }),
-        },
-    )?;
 
     Ok(())
 }

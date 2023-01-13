@@ -19,4 +19,3 @@ default = []
 chrono = { version = "0.4.23", default-features = false }
 anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 anchor-spl = "0.25.0"
-clockwork-sdk = { version = "=1.3.9", features = ["thread"] }

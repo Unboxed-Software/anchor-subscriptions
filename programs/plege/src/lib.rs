@@ -4,7 +4,6 @@ pub mod error;
 pub mod instructions;
 pub mod state;
 
-use clockwork_sdk::ThreadResponse;
 use instructions::*;
 use state::Interval;
 
@@ -12,8 +11,6 @@ declare_id!("7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA");
 
 #[program]
 pub mod plege {
-    use clockwork_sdk::ThreadResponse;
-
     use super::*;
 
     pub fn create_user(ctx: Context<CreateUser>) -> Result<()> {
@@ -44,12 +41,12 @@ pub mod plege {
 
     pub fn close_subscription_account(
         ctx: Context<CloseSubscriptionAccount>,
-        subscription_bump: u8,
+        _subscription_bump: u8,
     ) -> Result<()> {
-        instructions::close_subscription_account(ctx, subscription_bump)
+        instructions::close_subscription_account(ctx)
     }
 
-    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<ThreadResponse> {
+    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
         instructions::complete_payment(ctx)
     }
 

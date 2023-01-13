@@ -229,16 +229,6 @@ export type Plege = {
           "isSigner": false
         },
         {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -300,16 +290,6 @@ export type Plege = {
           "isSigner": false
         },
         {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -339,16 +319,6 @@ export type Plege = {
           "name": "subscriber",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -392,11 +362,6 @@ export type Plege = {
           "isSigner": false
         },
         {
-          "name": "subscriptionThread",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -407,10 +372,7 @@ export type Plege = {
           "isSigner": false
         }
       ],
-      "args": [],
-      "returns": {
-        "defined": "ThreadResponse"
-      }
+      "args": []
     },
     {
       "name": "disallowNewSubscribers",
@@ -541,16 +503,6 @@ export type Plege = {
         {
           "name": "subscriberAta",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
           "isSigner": false
         },
         {
@@ -971,16 +923,6 @@ export const IDL: Plege = {
           "isSigner": false
         },
         {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1042,16 +984,6 @@ export const IDL: Plege = {
           "isSigner": false
         },
         {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1081,16 +1013,6 @@ export const IDL: Plege = {
           "name": "subscriber",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -1134,11 +1056,6 @@ export const IDL: Plege = {
           "isSigner": false
         },
         {
-          "name": "subscriptionThread",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1149,10 +1066,7 @@ export const IDL: Plege = {
           "isSigner": false
         }
       ],
-      "args": [],
-      "returns": {
-        "defined": "ThreadResponse"
-      }
+      "args": []
     },
     {
       "name": "disallowNewSubscribers",
@@ -1283,16 +1197,6 @@ export const IDL: Plege = {
         {
           "name": "subscriberAta",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "subscriptionThread",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "threadProgram",
-          "isMut": false,
           "isSigner": false
         },
         {
