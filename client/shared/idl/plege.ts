@@ -81,7 +81,10 @@ export type Plege = {
                 "path": "auth"
               }
             ]
-          }
+          },
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "mint",
@@ -191,7 +194,10 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -369,7 +375,10 @@ export type Plege = {
         {
           "name": "subscription",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "tier"
+          ]
         },
         {
           "name": "app",
@@ -379,7 +388,10 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "destination",
@@ -418,12 +430,18 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -444,12 +462,18 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -470,12 +494,18 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -501,12 +531,18 @@ export type Plege = {
         {
           "name": "oldTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "newTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -531,7 +567,10 @@ export type Plege = {
                 "path": "subscriber"
               }
             ]
-          }
+          },
+          "relations": [
+            "subscriber"
+          ]
         },
         {
           "name": "subscriber",
@@ -929,7 +968,10 @@ export const IDL: Plege = {
                 "path": "auth"
               }
             ]
-          }
+          },
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "mint",
@@ -1039,7 +1081,10 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -1217,7 +1262,10 @@ export const IDL: Plege = {
         {
           "name": "subscription",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "tier"
+          ]
         },
         {
           "name": "app",
@@ -1227,7 +1275,10 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "destination",
@@ -1266,12 +1317,18 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -1292,12 +1349,18 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -1318,12 +1381,18 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -1349,12 +1418,18 @@ export const IDL: Plege = {
         {
           "name": "oldTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "newTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -1379,7 +1454,10 @@ export const IDL: Plege = {
                 "path": "subscriber"
               }
             ]
-          }
+          },
+          "relations": [
+            "subscriber"
+          ]
         },
         {
           "name": "subscriber",

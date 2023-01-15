@@ -101,6 +101,7 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
                     ctx.remaining_accounts[10].clone(), // treasury mint *static*
                     ctx.remaining_accounts[11].clone(), // treasury token account *static*
                     ctx.remaining_accounts[12].clone(), // plege program *static*
+                    ctx.remaining_accounts[13].clone(), // referral program *static*
                 ]
             )?;
             

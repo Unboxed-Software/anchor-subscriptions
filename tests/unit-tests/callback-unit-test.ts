@@ -4,6 +4,7 @@ import {
     getAccount,
     mintToChecked,
     createMint,
+    createAccount,
     mintTo,
     programSupportsExtensions,
     TOKEN_PROGRAM_ID,
@@ -43,6 +44,7 @@ let tokenMint: anchor.web3.PublicKey = null
 let treasuryATA: anchor.web3.PublicKey = null
 let subscriberAta: anchor.web3.PublicKey = null
 let subscriptionPda: anchor.web3.PublicKey = null
+let referralPda: anchor.web3.PublicKey = null
 let destinationAta: anchor.web3.PublicKey = null
 let refereeAta: anchor.web3.PublicKey = null
 let referralTreasuryTokenAcct: anchor.web3.PublicKey = null
@@ -79,6 +81,7 @@ describe("test callback ix", async () => {
         ],
         referralProgram.programId
         )
+    
 
     it("creates user", async () => {
         await safeAirdrop(authority.publicKey, provider.connection)
@@ -88,7 +91,11 @@ describe("test callback ix", async () => {
                 auth: authority.publicKey,
             })
             .signers([authority])
-            .rpc()
+            .rpc({
+                skipPreflight: true,
+                commitment: "confirmed",
+                preflightCommitment: "confirmed"
+            })
         })
 
     it("creating app", async () => {
@@ -100,12 +107,28 @@ describe("test callback ix", async () => {
             9
         )
 
+        // NEED TO CHANGE THIS
         treasuryATA = await createAssociatedTokenAccount(
             provider.connection,
             authority,
             tokenMint,
-            authority.publicKey
+            referralship
         )
+        // const [treasuryTokenAcct, treasurybump] = await anchor.web3.PublicKey.findProgramAddressSync(
+        //     [
+        //         Buffer.from("REFERRALSHIP"),
+        //         Buffer.from("TREASURY"),
+        //         app.toBuffer(),
+        //         tokenMint.toBuffer(),
+        //     ],
+        //     referralProgram.programId
+        //     )
+        // treasuryATA = treasuryTokenAcct
+        // await createAccount(provider.connection,
+        //     authority,
+        //     tokenMint,
+        //     referralship,
+        //     )
 
         refereeAta = await createAssociatedTokenAccount(
             provider.connection,
@@ -123,23 +146,51 @@ describe("test callback ix", async () => {
         )
         destinationAta = destination.address
 
-        const tx = await program.methods.createApp(1, "Test App")
+        subscriberAta = await createAssociatedTokenAccount(
+            provider.connection,
+            authority,
+            tokenMint,
+            subscriber.publicKey,
+            {
+                skipPreflight: true,
+                commitment: "confirmed",
+                preflightCommitment: "confirmed"
+            }
+        )
+        
+        await mintTo(
+                provider.connection,
+                authority,
+                tokenMint,
+                subscriberAta,
+                authority,
+                100 * anchor.web3.LAMPORTS_PER_SOL
+                )
+
+        await program.methods.createApp(1, "Test App")
             .accounts({
                 mint: tokenMint,
                 auth: authority.publicKey,
                 treasury: treasuryATA,
             })
             .signers([authority])
-            .rpc()
+            .rpc({
+                skipPreflight: true,
+                commitment: "confirmed",
+                preflightCommitment: "confirmed"
+            })
     })
 
     it("create referralship and register callback", async () => {
         const referralAgentKeypair = await generateFundedKeypair(provider.connection)
-        referralTreasuryTokenAcct = await getAssociatedTokenAddress(
+        const referralTreasuryTokenTemp = await getOrCreateAssociatedTokenAccount(
+            provider.connection,
+            authority,
             tokenMint,
             referralship,
             true
             )
+            referralTreasuryTokenAcct = referralTreasuryTokenTemp.address
 
         referralAgentsCollectionNFT = await metaplex.nfts().create({
                 name: "Referral Agents",
@@ -157,7 +208,15 @@ describe("test callback ix", async () => {
             collection: referralAgentsCollectionNFT.mintAddress,
             collectionAuthority: authority,
             tokenOwner: referralAgentKeypair.publicKey,
+        },
+        {
+            confirmOptions: {
+                skipPreflight: true,
+                commitment: "confirmed",
+                preflightCommitment: "confirmed"
+            }
         })
+        console.log("Referral agent NFT: ", referralAgentNFT.mintAddress.toBase58())
 
         await referralProgram.methods.createReferralship(1, 10, [
             {address: refereeAta, weight: 90}
@@ -175,27 +234,31 @@ describe("test callback ix", async () => {
             rent: anchor.web3.SYSVAR_RENT_PUBKEY
         })
         .signers([authority])
-        .rpc()
+        .rpc({
+            skipPreflight: true,
+            commitment: "confirmed",
+            preflightCommitment: "confirmed"
+        })
     
         // static programs needed for split_payment ix
         const accounts: AccountMeta[] = [
             {pubkey: app, isSigner: false, isWritable: false},
             {pubkey: authority.publicKey, isSigner: false, isWritable: false},
-            // subscription, will be dynamic
-            // subscriber, will be dynamic
-            // tier, will be dynamic
-            // referral, will be dynamic
             {pubkey: referralship, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
-            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: false},
+            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: true},
             {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
             {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
             {pubkey: tokenMint, isSigner: false, isWritable: false},
-            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: false},
+            {pubkey: treasuryATA, isSigner: false, isWritable: true},
             {pubkey: program.programId, isSigner: false, isWritable: false},
             {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false}
+            // subscription, will be dynamic
+            // tier, will be dynamic
+            // subscriber, will be dynamic
+            // referral, will be dynamic
         ]
 
         for (let i =0; i < accounts.length; i++) {
@@ -215,7 +278,11 @@ describe("test callback ix", async () => {
             auth: authority.publicKey
         })
         .signers([authority])
-        .rpc()
+        .rpc({
+            skipPreflight: true,
+            commitment: "confirmed",
+            preflightCommitment: "confirmed"
+        })
         await provider.connection.confirmTransaction(registerTx)
 
         const appPDA = await program.account.app.fetch(app)
@@ -231,10 +298,12 @@ describe("test callback ix", async () => {
             signer: authority.publicKey
         })
         .signers([authority])
-        .rpc()
+        .rpc({
+            skipPreflight: true
+        })
     })
 
-    it("create subscription", async () => {
+    it("subscribe with referral", async () => {
         const [subscription, subscriptionBump] = await anchor.web3.PublicKey.findProgramAddressSync(
             [
                 Buffer.from("SUBSCRIPTION"),
@@ -245,20 +314,16 @@ describe("test callback ix", async () => {
             )
         subscriptionPda = subscription
 
-        subscriberAta = await createAssociatedTokenAccount(
-                    provider.connection,
-                    authority,
-                    tokenMint,
-                    subscriber.publicKey
-                )
-        await mintTo(
-                provider.connection,
-                authority,
-                tokenMint,
-                subscriberAta,
-                authority,
-                100 * anchor.web3.LAMPORTS_PER_SOL
-                )
+        const [referral, referralBump] = await anchor.web3.PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("REFERRAL"),
+                app.toBuffer(),
+                subscription.toBuffer(),
+                referralAgentNFT.mintAddress.toBuffer()
+            ],
+            referralProgram.programId
+            )
+        referralPda = referral
         
         const [subThread, threadBump] = await anchor.web3.PublicKey.findProgramAddressSync(
             [
@@ -270,45 +335,67 @@ describe("test callback ix", async () => {
             )
 
         await safeAirdrop(subscriber.publicKey, provider.connection)
-        await program.methods.createSubscription()
+
+        console.log(referralPda.toBase58())
+        console.log(referralship.toBase58())
+        console.log(app.toBase58())
+        console.log(subscription.toBase58())
+
+
+        await referralProgram.methods.subscribeWithReferral()
         .accounts({
+            referral: referralPda,
+            referralship: referralship,
+            referralAgentNftMint: referralAgentNFT.mintAddress,
+            referralAgentNftMetadata: referralAgentNFT.metadataAddress,
+            referralshipCollectionNftMint: referralAgentsCollectionNFT.mintAddress,
+            referralAgentsCollectionNftMetadata: referralAgentsCollectionNFT.metadataAddress,
+            treasuryMint: tokenMint,
             app: app,
-            tier: tier,
             subscription: subscription,
             subscriber: subscriber.publicKey,
-            subscriberAta: subscriberAta,
+            subscriberTokenAccount: subscriberAta,
+            tier: tier,
+            appAuthority: authority.publicKey,
+            plegeProgram: program.programId,
             subscriptionThread: subThread,
             threadProgram: THREAD_PROGRAM,
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId
         })
         .signers([subscriber])
-        .rpc()
+        .rpc({
+            skipPreflight: true,
+            commitment: "confirmed",
+            preflightCommitment: "confirmed"
+        })
     })
     
     it("completes payment", async () => {
         let thread = subscriptionThreadKey(subscriptionPda)
 
-        let remainingAccounts: AccountMeta[] = [
-            {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
-            {pubkey: referralProgram.programId, isSigner: false, isWritable:false},
-            {pubkey: authority.publicKey, isSigner: false, isWritable: false},
-            {pubkey: referralship, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
-            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: false},
-            {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
-            {pubkey: tokenMint, isSigner: false, isWritable: false},
-            {pubkey: treasuryATA, isSigner: false, isWritable: false},
-            {pubkey: program.programId, isSigner: false, isWritable: false},
-            {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
-            {pubkey: callbackProgramId, isSigner: false, isWritable: false}
-        ]
-        for (let i = 0; i < remainingAccounts.length; i++) {
-            console.log(remainingAccounts[i].pubkey.toBase58())
-        }
+        // let remainingAccounts: AccountMeta[] = [
+        //     {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
+        //     {pubkey: referralPda, isSigner: false, isWritable: false},
+        //     {pubkey: authority.publicKey, isSigner: false, isWritable: false},
+        //     {pubkey: referralship, isSigner: false, isWritable: false},
+        //     {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
+        //     {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
+        //     {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
+        //     {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: false},
+        //     {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
+        //     {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
+        //     {pubkey: tokenMint, isSigner: false, isWritable: false},
+        //     {pubkey: treasuryATA, isSigner: false, isWritable: false},
+        //     {pubkey: program.programId, isSigner: false, isWritable: false},
+        //     {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
+        //     {pubkey: callbackProgramId, isSigner: false, isWritable: false},
+        //     {pubkey: referralProgram.programId, isSigner: false, isWritable:false}
+        // ]
+        // for (let i = 0; i < remainingAccounts.length; i++) {
+        //     console.log(remainingAccounts[i].pubkey.toBase58())
+        // }
+
 
         await program.methods
         .completePayment()
@@ -322,22 +409,27 @@ describe("test callback ix", async () => {
         })
         .remainingAccounts([
             {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
-            {pubkey: referralProgram.programId, isSigner: false, isWritable:false},
+            {pubkey: referralPda, isSigner: false, isWritable: false},
             {pubkey: authority.publicKey, isSigner: false, isWritable: false},
             {pubkey: referralship, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
-            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: false},
+            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: true},
             {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
             {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
             {pubkey: tokenMint, isSigner: false, isWritable: false},
-            {pubkey: treasuryATA, isSigner: false, isWritable: false},
+            {pubkey: treasuryATA, isSigner: false, isWritable: true},
             {pubkey: program.programId, isSigner: false, isWritable: false},
             {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
             {pubkey: callbackProgramId, isSigner: false, isWritable: false},
+            {pubkey: referralProgram.programId, isSigner: false, isWritable: false},
         ])
-        .rpc()
+        .rpc({
+            skipPreflight: true,
+            commitment: "confirmed",
+            preflightCommitment: "confirmed"
+        })
     })
 })
 

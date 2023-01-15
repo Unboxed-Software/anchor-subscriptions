@@ -29,18 +29,6 @@ pub struct SplitPayment<'info> {
     pub app: Account<'info, App>,
     /// CHECK: only being used for seeds.
     pub app_authority: UncheckedAccount<'info>,
-    /// CHECK: Just needs to be a system account.
-    pub subscriber: UncheckedAccount<'info>,
-    #[account(
-        seeds = [
-            REFERRAL.as_bytes(),
-            app.key().as_ref(),
-            subscription.key().as_ref(),
-            referral_agent_nft_mint.key().as_ref()
-        ],
-        bump
-    )]
-    pub referral: Box<Account<'info, Referral>>,
     #[account(
         seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref()],
         bump
@@ -77,6 +65,19 @@ pub struct SplitPayment<'info> {
         has_one = app
     )]
     pub tier: Box<Account<'info, Tier>>,
+    /// CHECK: Just needs to be a system account.
+    pub subscriber: UncheckedAccount<'info>,
+    #[account(
+        seeds = [
+            REFERRAL.as_bytes(),
+            app.key().as_ref(),
+            subscription.key().as_ref(),
+            referral_agent_nft_mint.key().as_ref()
+        ],
+        bump
+    )]
+    pub referral: Box<Account<'info, Referral>>
+
 }
 
 pub fn split_payment<'info>(ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>) -> Result<()> {

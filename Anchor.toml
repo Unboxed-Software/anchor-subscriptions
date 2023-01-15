@@ -11,9 +11,7 @@ referrals = "2Mv4SLASEdH47uUB73n4Ft13ufzJoS2jomis27kqfLyW"
 [[test.genesis]]
 address = "3XXuUFfweXBwFgFfYaejLvZE4cGZiHgKiGfMtdxNzYmv"
 program = "./target/deploy/clockwork_thread_program.so"
-[[test.genesis]]
-address = "5sNX72Q73PcBLCmxScHjUbRAX1F8KPa7wr1fKGnSr9sm"
-program = "./target/deploy/local_callback_testing_program.so"
+
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 program = "./target/deploy/mpl_token_metadata.so"
@@ -22,7 +20,7 @@ program = "./target/deploy/mpl_token_metadata.so"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
