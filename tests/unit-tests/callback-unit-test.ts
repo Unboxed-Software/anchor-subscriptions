@@ -9,7 +9,11 @@ import {
     programSupportsExtensions,
     TOKEN_PROGRAM_ID,
     getOrCreateAssociatedTokenAccount,
-    getAssociatedTokenAddress
+    getAssociatedTokenAddress,
+    createInitializeAccountInstruction,
+    createAssociatedTokenAccountInstruction,
+    getMinimumBalanceForRentExemptAccount,
+    ACCOUNT_SIZE
 } from "@solana/spl-token"
 import { BN, Program } from "@project-serum/anchor"
 import { Callback, AccountMeta } from "../utils/callback"
@@ -22,7 +26,7 @@ import {
     THREAD_PROGRAM,
     subscriptionThreadKey
 } from "../utils/basic-functions"
-import { Account, keypairIdentity, Metaplex, mockStorage, token } from "@metaplex-foundation/js"
+import { Account, keypairIdentity, Metaplex, mockStorage, token, TransactionBuilder } from "@metaplex-foundation/js"
 import { PROGRAM_ADDRESS as METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata'
 import { test } from "mocha"
 
@@ -107,28 +111,50 @@ describe("test callback ix", async () => {
             9
         )
 
-        // NEED TO CHANGE THIS
-        treasuryATA = await createAssociatedTokenAccount(
-            provider.connection,
-            authority,
+        // DERIVE TREASURY TOKEN ACCOUNT, NOT ACTUALLY CREATED YET
+        const [treasuryTokenAcct, treasurybump] = findReferralshipTreasuryAccountAddress(
+            app,
             tokenMint,
-            referralship
+            referralProgram.programId
         )
-        // const [treasuryTokenAcct, treasurybump] = await anchor.web3.PublicKey.findProgramAddressSync(
-        //     [
-        //         Buffer.from("REFERRALSHIP"),
-        //         Buffer.from("TREASURY"),
-        //         app.toBuffer(),
-        //         tokenMint.toBuffer(),
-        //     ],
-        //     referralProgram.programId
+        treasuryATA = treasuryTokenAcct
+
+        // NEED TO CREATE TREASURY TOKEN ACCOUNT AND MINT TOKENS
+
+        // const lamps = await getMinimumBalanceForRentExemptAccount(provider.connection)
+        // const CreateAccountParams: anchor.web3.CreateAccountParams = {
+        //     fromPubkey: authority.publicKey,
+        //     newAccountPubkey: treasuryATA,
+        //     lamports: lamps,
+        //     programId: anchor.web3.SystemProgram.programId,
+        //     space: ACCOUNT_SIZE
+        // }
+
+        // let tx = new anchor.web3.Transaction()
+        // tx.add(
+        //     await anchor.web3.SystemProgram.createAccount(CreateAccountParams),
+        //     await createInitializeAccountInstruction(
+        //         treasuryATA,
+        //         tokenMint,
+        //         referralship
         //     )
-        // treasuryATA = treasuryTokenAcct
-        // await createAccount(provider.connection,
-        //     authority,
-        //     tokenMint,
-        //     referralship,
-        //     )
+        // )
+        // const result = await provider.sendAndConfirm(tx, [authority])
+        // console.log("Initialize account tx:", result)
+
+
+        try {
+            await mintTo(
+                provider.connection,
+                authority,
+                tokenMint,
+                treasuryATA,
+                authority,
+                100000000
+            )
+        } catch (e) {
+            console.log(e.message)
+        }
 
         refereeAta = await createAssociatedTokenAccount(
             provider.connection,
@@ -187,7 +213,7 @@ describe("test callback ix", async () => {
             provider.connection,
             authority,
             tokenMint,
-            referralship,
+            referralAgentKeypair.publicKey,
             true
             )
             referralTreasuryTokenAcct = referralTreasuryTokenTemp.address
@@ -286,7 +312,7 @@ describe("test callback ix", async () => {
         await provider.connection.confirmTransaction(registerTx)
 
         const appPDA = await program.account.app.fetch(app)
-        console.log(appPDA.callback.accounts)
+        //console.log(appPDA.callback.accounts)
         console.log("Callback registered for program: ", callbackProgramId)
     })
     it("create tier", async () => {
@@ -336,11 +362,6 @@ describe("test callback ix", async () => {
 
         await safeAirdrop(subscriber.publicKey, provider.connection)
 
-        console.log(referralPda.toBase58())
-        console.log(referralship.toBase58())
-        console.log(app.toBase58())
-        console.log(subscription.toBase58())
-
 
         await referralProgram.methods.subscribeWithReferral()
         .accounts({
@@ -373,29 +394,6 @@ describe("test callback ix", async () => {
     
     it("completes payment", async () => {
         let thread = subscriptionThreadKey(subscriptionPda)
-
-        // let remainingAccounts: AccountMeta[] = [
-        //     {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
-        //     {pubkey: referralPda, isSigner: false, isWritable: false},
-        //     {pubkey: authority.publicKey, isSigner: false, isWritable: false},
-        //     {pubkey: referralship, isSigner: false, isWritable: false},
-        //     {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
-        //     {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
-        //     {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
-        //     {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: false},
-        //     {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
-        //     {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
-        //     {pubkey: tokenMint, isSigner: false, isWritable: false},
-        //     {pubkey: treasuryATA, isSigner: false, isWritable: false},
-        //     {pubkey: program.programId, isSigner: false, isWritable: false},
-        //     {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
-        //     {pubkey: callbackProgramId, isSigner: false, isWritable: false},
-        //     {pubkey: referralProgram.programId, isSigner: false, isWritable:false}
-        // ]
-        // for (let i = 0; i < remainingAccounts.length; i++) {
-        //     console.log(remainingAccounts[i].pubkey.toBase58())
-        // }
-
 
         await program.methods
         .completePayment()
@@ -444,4 +442,20 @@ async function safeAirdrop(address: anchor.web3.PublicKey, connection: anchor.we
         )
         await connection.confirmTransaction(signature)
     }
+}
+
+function findReferralshipTreasuryAccountAddress(
+    app: anchor.web3.PublicKey,
+    treasuryMint: anchor.web3.PublicKey,
+    programId: anchor.web3.PublicKey
+    ) {
+    return anchor.web3.PublicKey.findProgramAddressSync(
+        [
+            Buffer.from("REFERRALSHIP"),
+            app.toBuffer(),
+            Buffer.from("TREASURY"),
+            treasuryMint.toBuffer(),
+        ],
+        programId
+    )
 }

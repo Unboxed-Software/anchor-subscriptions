@@ -30,7 +30,6 @@ pub static DEFAULT_CALLBACK_SIZE: usize = 32 + 34 * 13 + 2 + 10;
 
 impl Callback {
     pub fn construct_callback(&self, dynamic_accounts: Option<Vec<AccountMeta>>) -> Instruction {
-        //let mut accounts_meta_vec = vec![AccountMeta::new(payer, true)];
         let mut accounts_meta_vec = vec![];
         accounts_meta_vec = self.add_account_meta_borsh_vec(accounts_meta_vec, &self.accounts);
 
@@ -86,7 +85,6 @@ impl Callback {
     }
 
     pub fn callback_size(&self) -> usize {
-
         let accounts_meta_size: usize = 34 * self.accounts.len();
         //let ix_data_len: usize = self.ix_data.unwrap().len();
         let ix_name_size: usize = self.ix_name.as_ref().unwrap().len();

@@ -24,6 +24,5 @@ pub fn register_callback(ctx: Context<RegisterCallback>, _app_id: u8, callback: 
     msg!("Registering Callback...");
     app.callback = Some(callback);
 
-
     Ok(())
 }
