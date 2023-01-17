@@ -69,6 +69,7 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
                 AccountMeta::new_readonly(ctx.remaining_accounts[0].key(), false),
                 AccountMeta::new_readonly(ctx.remaining_accounts[1].key(), false),
                 AccountMeta::new(ctx.accounts.subscriber_ata.key(), false),
+                //AccountMeta::new(ctx.remaining_accounts[14].key(), false)
                 ];
             let instruction: Instruction = callback_ix.construct_callback(Some(dynamic_accounts_meta));
 
@@ -102,6 +103,7 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
                     ctx.remaining_accounts[11].clone(), // treasury token account *static*
                     ctx.remaining_accounts[12].clone(), // plege program *static*
                     ctx.remaining_accounts[13].clone(), // referral program *static*
+                    ctx.remaining_accounts[14].clone() // account for referral split
                 ]
             )?;
             

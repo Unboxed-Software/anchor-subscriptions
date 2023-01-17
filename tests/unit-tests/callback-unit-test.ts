@@ -119,43 +119,6 @@ describe("test callback ix", async () => {
         )
         treasuryATA = treasuryTokenAcct
 
-        // NEED TO CREATE TREASURY TOKEN ACCOUNT AND MINT TOKENS
-
-        // const lamps = await getMinimumBalanceForRentExemptAccount(provider.connection)
-        // const CreateAccountParams: anchor.web3.CreateAccountParams = {
-        //     fromPubkey: authority.publicKey,
-        //     newAccountPubkey: treasuryATA,
-        //     lamports: lamps,
-        //     programId: anchor.web3.SystemProgram.programId,
-        //     space: ACCOUNT_SIZE
-        // }
-
-        // let tx = new anchor.web3.Transaction()
-        // tx.add(
-        //     await anchor.web3.SystemProgram.createAccount(CreateAccountParams),
-        //     await createInitializeAccountInstruction(
-        //         treasuryATA,
-        //         tokenMint,
-        //         referralship
-        //     )
-        // )
-        // const result = await provider.sendAndConfirm(tx, [authority])
-        // console.log("Initialize account tx:", result)
-
-
-        try {
-            await mintTo(
-                provider.connection,
-                authority,
-                tokenMint,
-                treasuryATA,
-                authority,
-                100000000
-            )
-        } catch (e) {
-            console.log(e.message)
-        }
-
         refereeAta = await createAssociatedTokenAccount(
             provider.connection,
             authority,
@@ -216,7 +179,7 @@ describe("test callback ix", async () => {
             referralAgentKeypair.publicKey,
             true
             )
-            referralTreasuryTokenAcct = referralTreasuryTokenTemp.address
+        referralTreasuryTokenAcct = referralTreasuryTokenTemp.address
 
         referralAgentsCollectionNFT = await metaplex.nfts().create({
                 name: "Referral Agents",
@@ -242,7 +205,6 @@ describe("test callback ix", async () => {
                 preflightCommitment: "confirmed"
             }
         })
-        console.log("Referral agent NFT: ", referralAgentNFT.mintAddress.toBase58())
 
         await referralProgram.methods.createReferralship(1, 10, [
             {address: refereeAta, weight: 90}
@@ -265,6 +227,16 @@ describe("test callback ix", async () => {
             commitment: "confirmed",
             preflightCommitment: "confirmed"
         })
+
+        // mint tokens to the newly created treasury token account
+        await mintTo(
+            provider.connection,
+            authority,
+            tokenMint,
+            treasuryATA,
+            authority,
+            100000000
+        )
     
         // static programs needed for split_payment ix
         const accounts: AccountMeta[] = [
@@ -286,10 +258,6 @@ describe("test callback ix", async () => {
             // subscriber, will be dynamic
             // referral, will be dynamic
         ]
-
-        for (let i =0; i < accounts.length; i++) {
-            console.log(accounts[i].pubkey.toBase58())
-        }
 
         const ixCallback: Callback = {
             programId: callbackProgramId,
@@ -422,6 +390,7 @@ describe("test callback ix", async () => {
             {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
             {pubkey: callbackProgramId, isSigner: false, isWritable: false},
             {pubkey: referralProgram.programId, isSigner: false, isWritable: false},
+            {pubkey: refereeAta, isSigner: false, isWritable: true}
         ])
         .rpc({
             skipPreflight: true,
