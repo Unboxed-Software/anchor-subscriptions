@@ -40,9 +40,7 @@ pub struct CompletePayment<'info> {
 }
 
 pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<ThreadResponse> {
-    //let subscription = &mut ctx.accounts.subscription;
     let app = &mut ctx.accounts.app;
-    //let tier = &mut ctx.accounts.tier;
     let destination = ctx.accounts.destination.to_account_info();
     let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
@@ -56,8 +54,6 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
 
     let balance = ctx.accounts.tier.price - ctx.accounts.subscription.credits;
 
-    msg!("balance is {:?}", balance);
-
     if balance > 0 {
         // if callback exists, call callback ix
         if let Some(callback_ix) = &app.callback {
@@ -68,8 +64,7 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
                 AccountMeta::new_readonly(ctx.accounts.tier.key(), false),
                 AccountMeta::new_readonly(ctx.remaining_accounts[0].key(), false),
                 AccountMeta::new_readonly(ctx.remaining_accounts[1].key(), false),
-                AccountMeta::new(ctx.accounts.subscriber_ata.key(), false),
-                //AccountMeta::new(ctx.remaining_accounts[14].key(), false)
+                AccountMeta::new(ctx.remaining_accounts[15].key(), false)
                 ];
             let instruction: Instruction = callback_ix.construct_callback(Some(dynamic_accounts_meta));
 
@@ -85,7 +80,6 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
                 &instruction,
                 &[
                     ctx.accounts.app.to_account_info(), // *static*
-                    ctx.accounts.subscriber_ata.to_account_info(), // *dynamic*
                     ctx.accounts.subscription.to_account_info(), // *dynamic*
                     ctx.accounts.tier.to_account_info(), // *dynamic*
                     ctx.accounts.token_program.to_account_info(), // *static*
@@ -103,7 +97,8 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
                     ctx.remaining_accounts[11].clone(), // treasury token account *static*
                     ctx.remaining_accounts[12].clone(), // plege program *static*
                     ctx.remaining_accounts[13].clone(), // referral program *static*
-                    ctx.remaining_accounts[14].clone() // account for referral split
+                    ctx.remaining_accounts[14].clone(), // callback program
+                    ctx.remaining_accounts[15].clone() // token account to receive payment split
                 ]
             )?;
             

@@ -1,19 +1,10 @@
 import * as anchor from "@project-serum/anchor"
 import {
     createAssociatedTokenAccount,
-    getAccount,
-    mintToChecked,
     createMint,
-    createAccount,
     mintTo,
-    programSupportsExtensions,
     TOKEN_PROGRAM_ID,
     getOrCreateAssociatedTokenAccount,
-    getAssociatedTokenAddress,
-    createInitializeAccountInstruction,
-    createAssociatedTokenAccountInstruction,
-    getMinimumBalanceForRentExemptAccount,
-    ACCOUNT_SIZE
 } from "@solana/spl-token"
 import { BN, Program } from "@project-serum/anchor"
 import { Callback, AccountMeta } from "../utils/callback"
@@ -21,14 +12,11 @@ import { Plege } from "../../target/types/plege"
 import { Referrals } from "../../target/types/referrals"
 import generateFundedKeypair from "../utils/keypair"
 import {
-    completePayment,
-    createSubscription,
     THREAD_PROGRAM,
     subscriptionThreadKey
 } from "../utils/basic-functions"
 import { Account, keypairIdentity, Metaplex, mockStorage, token, TransactionBuilder } from "@metaplex-foundation/js"
 import { PROGRAM_ADDRESS as METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata'
-import { test } from "mocha"
 
 anchor.setProvider(anchor.AnchorProvider.env())
 const provider = anchor.AnchorProvider.env()
@@ -171,7 +159,8 @@ describe("test callback ix", async () => {
     })
 
     it("create referralship and register callback", async () => {
-        const referralAgentKeypair = await generateFundedKeypair(provider.connection)
+        //const referralAgentKeypair = await generateFundedKeypair(provider.connection)
+        const referralAgentKeypair = anchor.web3.Keypair.generate()
         const referralTreasuryTokenTemp = await getOrCreateAssociatedTokenAccount(
             provider.connection,
             authority,
@@ -206,8 +195,8 @@ describe("test callback ix", async () => {
             }
         })
 
-        await referralProgram.methods.createReferralship(1, 10, [
-            {address: refereeAta, weight: 90}
+        await referralProgram.methods.createReferralship(1, 80, [
+            {address: refereeAta, weight: 20}
         ])
         .accounts({
             referralship: referralship,
@@ -227,16 +216,6 @@ describe("test callback ix", async () => {
             commitment: "confirmed",
             preflightCommitment: "confirmed"
         })
-
-        // mint tokens to the newly created treasury token account
-        await mintTo(
-            provider.connection,
-            authority,
-            tokenMint,
-            treasuryATA,
-            authority,
-            100000000
-        )
     
         // static programs needed for split_payment ix
         const accounts: AccountMeta[] = [
@@ -283,6 +262,18 @@ describe("test callback ix", async () => {
         //console.log(appPDA.callback.accounts)
         console.log("Callback registered for program: ", callbackProgramId)
     })
+    it("mint tokens to treasury token acccount", async () => {
+        // mint tokens to the newly created treasury token account
+        await mintTo(
+            provider.connection,
+            authority,
+            tokenMint,
+            treasuryATA,
+            authority,
+            100000000
+        )
+    })
+
     it("create tier", async () => {
         await program.methods
         .createTier(1, "Test Tier", new BN(10), { month: {} })
@@ -389,7 +380,6 @@ describe("test callback ix", async () => {
             {pubkey: program.programId, isSigner: false, isWritable: false},
             {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
             {pubkey: callbackProgramId, isSigner: false, isWritable: false},
-            {pubkey: referralProgram.programId, isSigner: false, isWritable: false},
             {pubkey: refereeAta, isSigner: false, isWritable: true}
         ])
         .rpc({

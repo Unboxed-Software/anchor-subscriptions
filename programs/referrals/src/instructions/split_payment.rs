@@ -208,6 +208,7 @@ pub fn split_payment<'info>(ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>
     let mut visited = HashSet::new();
 
     for token_account_info in ctx.remaining_accounts {
+
         if visited.contains(&token_account_info.key()) {
             return Err(ReferralError::DuplicateSplit.into());
         }
