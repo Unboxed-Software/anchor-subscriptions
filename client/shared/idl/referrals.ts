@@ -297,7 +297,10 @@ export type Referrals = {
         {
           "name": "tier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "appAuthority",
@@ -359,78 +362,6 @@ export type Referrals = {
           "name": "appAuthority",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "subscription",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "SUBSCRIPTION"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "App",
-                "path": "app"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "subscriber"
-              }
-            ],
-            "programId": {
-              "kind": "account",
-              "type": "publicKey",
-              "path": "plege_program"
-            }
-          }
-        },
-        {
-          "name": "subscriber",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tier",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "referral",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "REFERRAL"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "App",
-                "path": "app"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "Subscription",
-                "path": "subscription"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "Mint",
-                "path": "referral_agent_nft_mint"
-              }
-            ]
-          }
         },
         {
           "name": "referralship",
@@ -527,6 +458,81 @@ export type Referrals = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "subscription",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "SUBSCRIPTION"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "App",
+                "path": "app"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "subscriber"
+              }
+            ],
+            "programId": {
+              "kind": "account",
+              "type": "publicKey",
+              "path": "plege_program"
+            }
+          }
+        },
+        {
+          "name": "tier",
+          "isMut": false,
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
+        },
+        {
+          "name": "subscriber",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "referral",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "REFERRAL"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "App",
+                "path": "app"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Subscription",
+                "path": "subscription"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Mint",
+                "path": "referral_agent_nft_mint"
+              }
+            ]
+          }
         }
       ],
       "args": []
@@ -1045,7 +1051,10 @@ export const IDL: Referrals = {
         {
           "name": "tier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "appAuthority",
@@ -1107,78 +1116,6 @@ export const IDL: Referrals = {
           "name": "appAuthority",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "subscription",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "SUBSCRIPTION"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "App",
-                "path": "app"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "subscriber"
-              }
-            ],
-            "programId": {
-              "kind": "account",
-              "type": "publicKey",
-              "path": "plege_program"
-            }
-          }
-        },
-        {
-          "name": "subscriber",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tier",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "referral",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "REFERRAL"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "App",
-                "path": "app"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "Subscription",
-                "path": "subscription"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "Mint",
-                "path": "referral_agent_nft_mint"
-              }
-            ]
-          }
         },
         {
           "name": "referralship",
@@ -1275,6 +1212,81 @@ export const IDL: Referrals = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "subscription",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "SUBSCRIPTION"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "App",
+                "path": "app"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "subscriber"
+              }
+            ],
+            "programId": {
+              "kind": "account",
+              "type": "publicKey",
+              "path": "plege_program"
+            }
+          }
+        },
+        {
+          "name": "tier",
+          "isMut": false,
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
+        },
+        {
+          "name": "subscriber",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "referral",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "REFERRAL"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "App",
+                "path": "app"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Subscription",
+                "path": "subscription"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Mint",
+                "path": "referral_agent_nft_mint"
+              }
+            ]
+          }
         }
       ],
       "args": []

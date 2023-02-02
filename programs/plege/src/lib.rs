@@ -5,9 +5,10 @@ pub mod instructions;
 pub mod state;
 
 use instructions::*;
-use state::Interval;
+use state::{Interval, Callback};
 
-declare_id!("7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA");
+// declare_id!("7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA");
+declare_id!("7rNt9k1HccKaS2kNLyPnEpscFxsUmW3NLgMJNt4xDaMX");
 
 #[program]
 pub mod plege {
@@ -46,7 +47,7 @@ pub mod plege {
         instructions::close_subscription_account(ctx)
     }
 
-    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<()> {
+    pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<()> {
         instructions::complete_payment(ctx)
     }
 
@@ -64,5 +65,9 @@ pub mod plege {
 
     pub fn switch_subscription_tier(ctx: Context<SwitchSubscriptionTier>) -> Result<()> {
         instructions::switch_subscription_tier(ctx)
+    }
+
+    pub fn register_payment_callback(ctx: Context<RegisterPaymentCallback>, app_id: u8, callback: Callback) -> Result<()> {
+        instructions::register_payment_callback(ctx, app_id, callback)
     }
 }
