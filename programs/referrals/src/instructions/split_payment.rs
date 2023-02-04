@@ -24,6 +24,18 @@ pub struct SplitPayment<'info> {
         bump
     )]
     pub app: Account<'info, App>,
+    #[account(
+        seeds = [SUBSCRIPTION.as_bytes(), app.key().as_ref(), subscriber.key().as_ref()],
+        seeds::program = plege_program.key(),
+        bump
+    )]
+    pub subscription: Box<Account<'info, Subscription>>,
+    #[account(
+        constraint = subscription.tier == tier.key(),
+        has_one = app
+    )]
+    pub tier: Box<Account<'info, Tier>>,
+    pub token_program: Program<'info, Token>,
     /// CHECK: only being used for seeds.
     pub app_authority: UncheckedAccount<'info>,
     #[account(
@@ -50,18 +62,6 @@ pub struct SplitPayment<'info> {
     )]
     pub treasury_token_account: Box<Account<'info, TokenAccount>>,
     pub plege_program: Program<'info, Plege>,
-    pub token_program: Program<'info, Token>,
-    #[account(
-        seeds = [SUBSCRIPTION.as_bytes(), app.key().as_ref(), subscriber.key().as_ref()],
-        seeds::program = plege_program.key(),
-        bump
-    )]
-    pub subscription: Box<Account<'info, Subscription>>,
-    #[account(
-        constraint = subscription.tier == tier.key(),
-        has_one = app
-    )]
-    pub tier: Box<Account<'info, Tier>>,
     /// CHECK: Just needs to be a system account.
     pub subscriber: UncheckedAccount<'info>,
     #[account(

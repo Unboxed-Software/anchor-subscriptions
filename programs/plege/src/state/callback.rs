@@ -40,7 +40,8 @@ impl Callback {
             AccountMeta::new_readonly(ctx.accounts.token_program.key(), false)
         ];
 
-        let mut i = 0;
+        // first remaining account is for the callback program
+        let mut i = 1;
         for account in &self.additional_accounts {
             if *account {
                 accounts_meta_vec.push(AccountMeta::new(ctx.remaining_accounts[i].key(), false))

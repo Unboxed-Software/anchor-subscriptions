@@ -126,7 +126,7 @@ pub fn execute_callback_cpi<'info>(callback_ix: Instruction, ctx: &Context<'_, '
         ctx.accounts.app.to_account_info(),
         ctx.accounts.subscription.to_account_info(),
         ctx.accounts.tier.to_account_info(),
-        ctx.accounts.token_program.to_account_info()
+        ctx.accounts.token_program.to_account_info(),
     ];
 
     for account in ctx.remaining_accounts {

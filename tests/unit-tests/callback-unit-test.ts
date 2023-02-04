@@ -214,30 +214,27 @@ describe("test callback ix", async () => {
             preflightCommitment: "confirmed"
         })
     
-        // static programs needed for split_payment ix
-        const accounts: AccountMeta[] = [
-            {pubkey: app, isSigner: false, isWritable: false},
-            {pubkey: authority.publicKey, isSigner: false, isWritable: false},
-            {pubkey: referralship, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
-            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: true},
-            {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
-            {pubkey: tokenMint, isSigner: false, isWritable: false},
-            {pubkey: treasuryATA, isSigner: false, isWritable: true},
-            {pubkey: program.programId, isSigner: false, isWritable: false},
-            {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false}
-            // subscription, will be dynamic
-            // tier, will be dynamic
-            // subscriber, will be dynamic
-            // referral, will be dynamic
+        // define static accounts' mutability
+        const accounts: boolean[] = [
+            false, // {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
+            false, // {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
+            false, // {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: true},
+            false, // {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
+            false, // {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
+            true, // {pubkey: tokenMint, isSigner: false, isWritable: false},
+            false, // {pubkey: treasuryATA, isSigner: false, isWritable: true},
+            false, // {pubkey: program.programId, isSigner: false, isWritable: false},
+            false, // {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false}
+            true,
+            false,
+            false,
+            false,
+            true
         ]
 
         const ixCallback: Callback = {
             programId: referralProgram.programId,
-            accounts: accounts,
+            additionalAccounts: accounts,
             ixData: null,
             ixName: "split_payment"
         }
@@ -362,8 +359,7 @@ describe("test callback ix", async () => {
             //subscriptionThread: thread,
         })
         .remainingAccounts([
-            {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
-            {pubkey: referralPda, isSigner: false, isWritable: false},
+            {pubkey: referralProgram.programId, isSigner: false, isWritable: false},
             {pubkey: authority.publicKey, isSigner: false, isWritable: false},
             {pubkey: referralship, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
@@ -375,9 +371,9 @@ describe("test callback ix", async () => {
             {pubkey: tokenMint, isSigner: false, isWritable: false},
             {pubkey: treasuryATA, isSigner: false, isWritable: true},
             {pubkey: program.programId, isSigner: false, isWritable: false},
-            {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
-            {pubkey: referralProgram.programId, isSigner: false, isWritable: false},
-            {pubkey: refereeAta, isSigner: false, isWritable: true}
+            {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
+            {pubkey: referralPda, isSigner: false, isWritable: false},
+            {pubkey: refereeAta, isSigner: false, isWritable: true},
         ])
         .rpc({
             skipPreflight: true,
