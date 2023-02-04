@@ -41,10 +41,18 @@ impl Callback {
 
         // first remaining account is for the callback program
         let mut i = 1;
-        for account in &self.additional_accounts {
-            if *account {
+        for account_mutability in &self.additional_accounts {
+            // check account's mutability and if it's passed in as signer or not
+            if *account_mutability && ctx.remaining_accounts[i].is_signer {
+                accounts_meta_vec.push(AccountMeta::new(ctx.remaining_accounts[i].key(), true))
+            } 
+            else if  *account_mutability && !ctx.remaining_accounts[i].is_signer {
                 accounts_meta_vec.push(AccountMeta::new(ctx.remaining_accounts[i].key(), false))
-            } else {
+            } 
+            else if !*account_mutability && ctx.remaining_accounts[i].is_signer {
+                accounts_meta_vec.push(AccountMeta::new_readonly(ctx.remaining_accounts[i].key(), true))
+            }
+            else {
                 accounts_meta_vec.push(AccountMeta::new_readonly(ctx.remaining_accounts[i].key(), false))
             }
             i+=1;
