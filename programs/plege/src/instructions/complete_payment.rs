@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
-use anchor_lang::solana_program::{instruction::Instruction, program::{invoke, invoke_signed}};
+use anchor_lang::solana_program::{instruction::Instruction, program::{invoke}};
 use crate::state::*;
 use crate::error::PlegeError;
 
@@ -32,10 +32,10 @@ pub struct CompletePayment<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>, dynamic_pub_keys: Vec<Pubkey>) -> Result<()> {
-    let app = &mut ctx.accounts.app;
+pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<()> {
+    //let app = &mut ctx.accounts.app;
     let destination = ctx.accounts.destination.to_account_info();
-    let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
+    //let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
 
     let now_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -52,12 +52,12 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
     if balance > 0 {
         // else continue with transfer
         let transfer_accounts = Transfer {  
-            from: subscriber_ata.clone(),
+            from: ctx.accounts.subscriber_ata.to_account_info().clone(),
             to: destination.clone(),
             authority: ctx.accounts.subscription.to_account_info().clone(),
         };
 
-        let app_key = app.key();
+        let app_key = ctx.accounts.app.key();
         let subscriber_key = ctx.accounts.subscription.subscriber;
         let subscription_bump = ctx.accounts.subscription.bump;
         let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
@@ -70,8 +70,9 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
         transfer(transfer_ctx, transfer_amount)?;
 
         // if callback exists, call callback ix
-        if let Some(callback_ix) = &app.callback {
-            execute_callback_cpi(ctx, callback_ix, dynamic_pub_keys);
+        if let Some(callback_ix) = &ctx.accounts.app.callback {
+            let ix = callback_ix.construct_callback_ix(&ctx);
+            execute_callback_cpi(ix, &ctx)?;
         }
     } else {
         ctx.accounts.subscription.credits -= ctx.accounts.tier.price;
@@ -119,52 +120,23 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
 //     }
 // }
 
-pub fn execute_callback_cpi(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>, callback_ix: &Callback, dynamic_pubkeys: Vec<Pubkey>) -> Result<()> {
-    // create account meta - this might not be complete yet
-    let our_account_meta = vec![
-        AccountMeta::new_readonly(ctx.accounts.app.key(), false)
-        AccountMeta::new_readonly(ctx.accounts.subscription.key(), false),
-        AccountMeta::new_readonly(ctx.accounts.tier.key(), false),
-        AccountMeta::new_readonly(ctx.accounts.token_program.key(), false)
+pub fn execute_callback_cpi<'info>(callback_ix: Instruction, ctx: &Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<()> {
+
+    let mut account_infos = vec![
+        ctx.accounts.app.to_account_info(),
+        ctx.accounts.subscription.to_account_info(),
+        ctx.accounts.tier.to_account_info(),
+        ctx.accounts.token_program.to_account_info()
     ];
 
-    // iterate over callback_ix.additional_accounts and ctx.accounts.remaining_accounts and construct the account meta accordingly
-    // e.g. callback_ix.additional_accounts[0] is false so remaining_accounts[0] should be readonly
-    // build instruction
-    // let dynamic_accounts_meta = vec![
-    //     AccountMeta::new_readonly(ctx.accounts.subscription.key(), false),
-    //     AccountMeta::new_readonly(ctx.accounts.tier.key(), false),
-    //     AccountMeta::new_readonly(ctx.remaining_accounts[0].key(), false),
-    //     AccountMeta::new_readonly(ctx.remaining_accounts[1].key(), false),
-    //     AccountMeta::new(ctx.remaining_accounts[15].key(), false)
-    //     ];
-    // let instruction: Instruction = callback_ix.construct_callback(Some(dynamic_accounts_meta));
+    for account in ctx.remaining_accounts {
+        account_infos.push(account.clone());
+    }
 
     // invoke cpi, hard coding required split_payment accounts for now
     invoke(
-        &instruction,
-        &[
-            ctx.accounts.app.to_account_info(), // *static*
-            ctx.accounts.subscription.to_account_info(), // *dynamic*
-            ctx.accounts.tier.to_account_info(), // *dynamic*
-            ctx.accounts.token_program.to_account_info(), // *static*
-            ctx.remaining_accounts[0].clone(), // subscriber *dynamic*
-            ctx.remaining_accounts[1].clone(), // referral *dynamic*
-            ctx.remaining_accounts[2].clone(), // app authority *static*
-            ctx.remaining_accounts[3].clone(), // referralship *static*
-            ctx.remaining_accounts[4].clone(), // referral_agent_nft_mint *static*
-            ctx.remaining_accounts[5].clone(), // referral_agent_nft_metadata *staic*
-            ctx.remaining_accounts[6].clone(), // referral_agent_nft_token_account *static*
-            ctx.remaining_accounts[7].clone(), // referral_agent_treasury_token_account *staic*
-            ctx.remaining_accounts[8].clone(), // referral_agents_collection_nft_mint *static*
-            ctx.remaining_accounts[9].clone(), // referral_agents_collection_nft_metadata *static*
-            ctx.remaining_accounts[10].clone(), // treasury mint *static*
-            ctx.remaining_accounts[11].clone(), // treasury token account *static*
-            ctx.remaining_accounts[12].clone(), // plege program *static*
-            ctx.remaining_accounts[13].clone(), // referral program *static*
-            ctx.remaining_accounts[14].clone(), // callback program
-            ctx.remaining_accounts[15].clone() // token account to receive payment split
-        ]
+        &callback_ix,
+        &account_infos
     )?;
 
     Ok(())

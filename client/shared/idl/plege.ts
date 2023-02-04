@@ -753,11 +753,9 @@ export type Plege = {
             "type": "publicKey"
           },
           {
-            "name": "accounts",
+            "name": "additionalAccounts",
             "type": {
-              "vec": {
-                "defined": "AccountMetaBorsh"
-              }
+              "vec": "bool"
             }
           },
           {
@@ -1592,11 +1590,9 @@ export const IDL: Plege = {
             "type": "publicKey"
           },
           {
-            "name": "accounts",
+            "name": "additionalAccounts",
             "type": {
-              "vec": {
-                "defined": "AccountMetaBorsh"
-              }
+              "vec": "bool"
             }
           },
           {
