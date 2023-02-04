@@ -120,15 +120,25 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
 // }
 
 pub fn execute_callback_cpi(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>, callback_ix: &Callback, dynamic_pubkeys: Vec<Pubkey>) -> Result<()> {
-    // build instruction
-    let dynamic_accounts_meta = vec![
+    // create account meta - this might not be complete yet
+    let our_account_meta = vec![
+        AccountMeta::new_readonly(ctx.accounts.app.key(), false)
         AccountMeta::new_readonly(ctx.accounts.subscription.key(), false),
         AccountMeta::new_readonly(ctx.accounts.tier.key(), false),
-        AccountMeta::new_readonly(ctx.remaining_accounts[0].key(), false),
-        AccountMeta::new_readonly(ctx.remaining_accounts[1].key(), false),
-        AccountMeta::new(ctx.remaining_accounts[15].key(), false)
-        ];
-    let instruction: Instruction = callback_ix.construct_callback(Some(dynamic_accounts_meta));
+        AccountMeta::new_readonly(ctx.accounts.token_program.key(), false)
+    ];
+
+    // iterate over callback_ix.additional_accounts and ctx.accounts.remaining_accounts and construct the account meta accordingly
+    // e.g. callback_ix.additional_accounts[0] is false so remaining_accounts[0] should be readonly
+    // build instruction
+    // let dynamic_accounts_meta = vec![
+    //     AccountMeta::new_readonly(ctx.accounts.subscription.key(), false),
+    //     AccountMeta::new_readonly(ctx.accounts.tier.key(), false),
+    //     AccountMeta::new_readonly(ctx.remaining_accounts[0].key(), false),
+    //     AccountMeta::new_readonly(ctx.remaining_accounts[1].key(), false),
+    //     AccountMeta::new(ctx.remaining_accounts[15].key(), false)
+    //     ];
+    // let instruction: Instruction = callback_ix.construct_callback(Some(dynamic_accounts_meta));
 
     // invoke cpi, hard coding required split_payment accounts for now
     invoke(
