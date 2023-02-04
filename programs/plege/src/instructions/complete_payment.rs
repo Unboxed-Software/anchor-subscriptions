@@ -33,9 +33,7 @@ pub struct CompletePayment<'info> {
 }
 
 pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<()> {
-    //let app = &mut ctx.accounts.app;
     let destination = ctx.accounts.destination.to_account_info();
-    //let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
 
     let now_timestamp = Clock::get().unwrap().unix_timestamp;
@@ -133,7 +131,6 @@ pub fn execute_callback_cpi<'info>(callback_ix: Instruction, ctx: &Context<'_, '
         account_infos.push(account.clone());
     }
 
-    // invoke cpi, hard coding required split_payment accounts for now
     invoke(
         &callback_ix,
         &account_infos

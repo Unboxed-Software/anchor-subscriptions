@@ -12,7 +12,6 @@ use crate::instructions::{CompletePayment};
 pub struct Callback {
     pub program_id: Pubkey,
     pub additional_accounts: Vec<bool>,
-    //pub ix_data: Vec<u8>,
     pub ix_data: Option<u8>,
     // only for Anchor programs
     pub ix_name: Option<String>,
@@ -51,8 +50,8 @@ impl Callback {
             i+=1;
         }
 
-        let mut ix_data: Vec<u8> = vec![];
         // ix data to target the intended program instruction
+        let mut ix_data: Vec<u8> = vec![];
         if let Some(callback_ix_name) = &self.ix_name {
             ix_data = self.anchor_sighash(&callback_ix_name).into();
         }

@@ -15,8 +15,7 @@ import {
     THREAD_PROGRAM,
     subscriptionThreadKey
 } from "../utils/basic-functions"
-import { Account, keypairIdentity, Metaplex, mockStorage, token, TransactionBuilder } from "@metaplex-foundation/js"
-import { PROGRAM_ADDRESS as METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata'
+import { keypairIdentity, Metaplex, mockStorage } from "@metaplex-foundation/js"
 
 anchor.setProvider(anchor.AnchorProvider.env())
 const provider = anchor.AnchorProvider.env()
@@ -216,15 +215,15 @@ describe("test callback ix", async () => {
     
         // define static accounts' mutability
         const accounts: boolean[] = [
-            false, // {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
-            false, // {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
-            false, // {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: true},
-            false, // {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
-            false, // {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
-            true, // {pubkey: tokenMint, isSigner: false, isWritable: false},
-            false, // {pubkey: treasuryATA, isSigner: false, isWritable: true},
-            false, // {pubkey: program.programId, isSigner: false, isWritable: false},
-            false, // {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false}
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
             true,
             false,
             false,
@@ -252,8 +251,6 @@ describe("test callback ix", async () => {
         })
         await provider.connection.confirmTransaction(registerTx)
 
-        const appPDA = await program.account.app.fetch(app)
-        //console.log(appPDA.callback.accounts)
         console.log("Callback registered for program: ", referralProgram.programId)
     })
     it("mint tokens to treasury token acccount", async () => {
