@@ -10,7 +10,8 @@ use anchor_lang::{
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct Callback {
     pub program_id: Pubkey,
-    pub accounts: Vec<AccountMetaBorsh>,
+    pub static_accounts: Vec<AccountMetaBorsh>,
+    pub dynamic_accounts: Vec<DynamicAccountMetaBorsh>,
     //pub ix_data: Vec<u8>,
     pub ix_data: Option<u8>,
     // only for Anchor programs
@@ -26,12 +27,20 @@ pub struct AccountMetaBorsh {
     pub is_writable: bool,
 }
 
+#[zero_copy]
+#[repr(packed)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
+pub struct DynamicAccountMetaBorsh {
+    pub is_signer: bool,
+    pub is_writable: bool,
+}
+
 pub static DEFAULT_CALLBACK_SIZE: usize = 32 + 34 * 13 + 2 + 10;
 
 impl Callback {
     pub fn construct_callback(&self, dynamic_accounts: Option<Vec<AccountMeta>>) -> Instruction {
         let mut accounts_meta_vec = vec![];
-        accounts_meta_vec = self.add_account_meta_borsh_vec(accounts_meta_vec, &self.accounts);
+        accounts_meta_vec = self.add_account_meta_borsh_vec(accounts_meta_vec, &self.static_accounts);
 
         if let Some(dynamic_accounts) = dynamic_accounts {
             accounts_meta_vec = self.add_dynamic_account_meta(accounts_meta_vec, &dynamic_accounts);
@@ -51,6 +60,11 @@ impl Callback {
             data: ix_data,
             accounts: accounts_meta_vec
         }
+    }
+
+    pub fn create_dynamic_account_meta(&self, dynamic_pubkeys: Vec<Pubkey>) {
+        let pubkey_iter = dynamic_pubkeys.iter();
+        
     }
 
     /// The sighash of a named instruction in an Anchor program.
@@ -91,4 +105,6 @@ impl Callback {
 
         32 + accounts_meta_size + 2 + 1 + ix_name_size
     }
+
+
 }

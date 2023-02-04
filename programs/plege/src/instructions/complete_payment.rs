@@ -32,7 +32,7 @@ pub struct CompletePayment<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<()> {
+pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>, dynamic_pub_keys: Vec<Pubkey>) -> Result<()> {
     let app = &mut ctx.accounts.app;
     let destination = ctx.accounts.destination.to_account_info();
     let subscriber_ata = &mut ctx.accounts.subscriber_ata.to_account_info();
@@ -50,64 +50,28 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
     msg!("balance is {:?}", balance);
 
     if balance > 0 {
+        // else continue with transfer
+        let transfer_accounts = Transfer {  
+            from: subscriber_ata.clone(),
+            to: destination.clone(),
+            authority: ctx.accounts.subscription.to_account_info().clone(),
+        };
+
+        let app_key = app.key();
+        let subscriber_key = ctx.accounts.subscription.subscriber;
+        let subscription_bump = ctx.accounts.subscription.bump;
+        let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
+        let signers = [&seeds[..]];
+        let transfer_amount = balance;
+
+        let transfer_ctx =
+                CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
+
+        transfer(transfer_ctx, transfer_amount)?;
+
         // if callback exists, call callback ix
         if let Some(callback_ix) = &app.callback {
-
-            // build instruction
-            let dynamic_accounts_meta = vec![
-                AccountMeta::new_readonly(ctx.accounts.subscription.key(), false),
-                AccountMeta::new_readonly(ctx.accounts.tier.key(), false),
-                AccountMeta::new_readonly(ctx.remaining_accounts[0].key(), false),
-                AccountMeta::new_readonly(ctx.remaining_accounts[1].key(), false),
-                AccountMeta::new(ctx.remaining_accounts[15].key(), false)
-                ];
-            let instruction: Instruction = callback_ix.construct_callback(Some(dynamic_accounts_meta));
-
-            // invoke cpi, hard coding required split_payment accounts for now
-            invoke(
-                &instruction,
-                &[
-                    ctx.accounts.app.to_account_info(), // *static*
-                    ctx.accounts.subscription.to_account_info(), // *dynamic*
-                    ctx.accounts.tier.to_account_info(), // *dynamic*
-                    ctx.accounts.token_program.to_account_info(), // *static*
-                    ctx.remaining_accounts[0].clone(), // subscriber *dynamic*
-                    ctx.remaining_accounts[1].clone(), // referral *dynamic*
-                    ctx.remaining_accounts[2].clone(), // app authority *static*
-                    ctx.remaining_accounts[3].clone(), // referralship *static*
-                    ctx.remaining_accounts[4].clone(), // referral_agent_nft_mint *static*
-                    ctx.remaining_accounts[5].clone(), // referral_agent_nft_metadata *staic*
-                    ctx.remaining_accounts[6].clone(), // referral_agent_nft_token_account *static*
-                    ctx.remaining_accounts[7].clone(), // referral_agent_treasury_token_account *staic*
-                    ctx.remaining_accounts[8].clone(), // referral_agents_collection_nft_mint *static*
-                    ctx.remaining_accounts[9].clone(), // referral_agents_collection_nft_metadata *static*
-                    ctx.remaining_accounts[10].clone(), // treasury mint *static*
-                    ctx.remaining_accounts[11].clone(), // treasury token account *static*
-                    ctx.remaining_accounts[12].clone(), // plege program *static*
-                    ctx.remaining_accounts[13].clone(), // referral program *static*
-                    ctx.remaining_accounts[14].clone(), // callback program
-                    ctx.remaining_accounts[15].clone() // token account to receive payment split
-                ]
-            )?;
-        } else {
-            // else continue with transfer
-            let transfer_accounts = Transfer {  
-                from: subscriber_ata.clone(),
-                to: destination.clone(),
-                authority: ctx.accounts.subscription.to_account_info().clone(),
-            };
-
-            let app_key = app.key();
-            let subscriber_key = ctx.accounts.subscription.subscriber;
-            let subscription_bump = ctx.accounts.subscription.bump;
-            let seeds = &["SUBSCRIPTION".as_bytes(), app_key.as_ref(), subscriber_key.as_ref(), &[subscription_bump]];
-            let signers = [&seeds[..]];
-            let transfer_amount = balance;
-
-            let transfer_ctx =
-                    CpiContext::new_with_signer(token_program.clone(), transfer_accounts, &signers);
-
-            transfer(transfer_ctx, transfer_amount)?;
+            execute_callback_cpi(ctx, callback_ix, dynamic_pub_keys);
         }
     } else {
         ctx.accounts.subscription.credits -= ctx.accounts.tier.price;
@@ -154,3 +118,44 @@ pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'
 //         return max(0, (years as u32) - 1);
 //     }
 // }
+
+pub fn execute_callback_cpi(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>, callback_ix: &Callback, dynamic_pubkeys: Vec<Pubkey>) -> Result<()> {
+    // build instruction
+    let dynamic_accounts_meta = vec![
+        AccountMeta::new_readonly(ctx.accounts.subscription.key(), false),
+        AccountMeta::new_readonly(ctx.accounts.tier.key(), false),
+        AccountMeta::new_readonly(ctx.remaining_accounts[0].key(), false),
+        AccountMeta::new_readonly(ctx.remaining_accounts[1].key(), false),
+        AccountMeta::new(ctx.remaining_accounts[15].key(), false)
+        ];
+    let instruction: Instruction = callback_ix.construct_callback(Some(dynamic_accounts_meta));
+
+    // invoke cpi, hard coding required split_payment accounts for now
+    invoke(
+        &instruction,
+        &[
+            ctx.accounts.app.to_account_info(), // *static*
+            ctx.accounts.subscription.to_account_info(), // *dynamic*
+            ctx.accounts.tier.to_account_info(), // *dynamic*
+            ctx.accounts.token_program.to_account_info(), // *static*
+            ctx.remaining_accounts[0].clone(), // subscriber *dynamic*
+            ctx.remaining_accounts[1].clone(), // referral *dynamic*
+            ctx.remaining_accounts[2].clone(), // app authority *static*
+            ctx.remaining_accounts[3].clone(), // referralship *static*
+            ctx.remaining_accounts[4].clone(), // referral_agent_nft_mint *static*
+            ctx.remaining_accounts[5].clone(), // referral_agent_nft_metadata *staic*
+            ctx.remaining_accounts[6].clone(), // referral_agent_nft_token_account *static*
+            ctx.remaining_accounts[7].clone(), // referral_agent_treasury_token_account *staic*
+            ctx.remaining_accounts[8].clone(), // referral_agents_collection_nft_mint *static*
+            ctx.remaining_accounts[9].clone(), // referral_agents_collection_nft_metadata *static*
+            ctx.remaining_accounts[10].clone(), // treasury mint *static*
+            ctx.remaining_accounts[11].clone(), // treasury token account *static*
+            ctx.remaining_accounts[12].clone(), // plege program *static*
+            ctx.remaining_accounts[13].clone(), // referral program *static*
+            ctx.remaining_accounts[14].clone(), // callback program
+            ctx.remaining_accounts[15].clone() // token account to receive payment split
+        ]
+    )?;
+
+    Ok(())
+}
