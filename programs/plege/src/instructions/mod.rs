@@ -7,7 +7,7 @@ mod create_tier;
 mod create_user;
 mod switch_subscription_tier;
 mod toggle_new_subscribers;
-mod register_callback;
+mod register_payment_callback;
 
 pub use cancel_subscription::*;
 pub use close_subscription_account::*;
@@ -18,4 +18,4 @@ pub use create_tier::*;
 pub use create_user::*;
 pub use switch_subscription_tier::*;
 pub use toggle_new_subscribers::*;
-pub use register_callback::*;
+pub use register_payment_callback::*;

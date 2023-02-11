@@ -369,6 +369,49 @@ export type Referrals = {
           }
         },
         {
+          "name": "subscription",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "SUBSCRIPTION"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "App",
+                "path": "app"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "subscriber"
+              }
+            ],
+            "programId": {
+              "kind": "account",
+              "type": "publicKey",
+              "path": "plege_program"
+            }
+          }
+        },
+        {
+          "name": "tier",
+          "isMut": false,
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "appAuthority",
           "isMut": false,
           "isSigner": false
@@ -463,49 +506,6 @@ export type Referrals = {
           "name": "plegeProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "subscription",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "SUBSCRIPTION"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "App",
-                "path": "app"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "subscriber"
-              }
-            ],
-            "programId": {
-              "kind": "account",
-              "type": "publicKey",
-              "path": "plege_program"
-            }
-          }
-        },
-        {
-          "name": "tier",
-          "isMut": false,
-          "isSigner": false,
-          "relations": [
-            "app"
-          ]
         },
         {
           "name": "subscriber",
@@ -1133,6 +1133,49 @@ export const IDL: Referrals = {
           }
         },
         {
+          "name": "subscription",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "SUBSCRIPTION"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "App",
+                "path": "app"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "subscriber"
+              }
+            ],
+            "programId": {
+              "kind": "account",
+              "type": "publicKey",
+              "path": "plege_program"
+            }
+          }
+        },
+        {
+          "name": "tier",
+          "isMut": false,
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "appAuthority",
           "isMut": false,
           "isSigner": false
@@ -1227,49 +1270,6 @@ export const IDL: Referrals = {
           "name": "plegeProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "subscription",
-          "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "type": "string",
-                "value": "SUBSCRIPTION"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "App",
-                "path": "app"
-              },
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "subscriber"
-              }
-            ],
-            "programId": {
-              "kind": "account",
-              "type": "publicKey",
-              "path": "plege_program"
-            }
-          }
-        },
-        {
-          "name": "tier",
-          "isMut": false,
-          "isSigner": false,
-          "relations": [
-            "app"
-          ]
         },
         {
           "name": "subscriber",

@@ -606,7 +606,7 @@ export type Plege = {
       "args": []
     },
     {
-      "name": "registerCallback",
+      "name": "registerPaymentCallback",
       "accounts": [
         {
           "name": "app",
@@ -801,11 +801,9 @@ export type Plege = {
             "type": "publicKey"
           },
           {
-            "name": "accounts",
+            "name": "additionalAccounts",
             "type": {
-              "vec": {
-                "defined": "AccountMetaBorsh"
-              }
+              "vec": "bool"
             }
           },
           {
@@ -1493,7 +1491,7 @@ export const IDL: Plege = {
       "args": []
     },
     {
-      "name": "registerCallback",
+      "name": "registerPaymentCallback",
       "accounts": [
         {
           "name": "app",
@@ -1688,11 +1686,9 @@ export const IDL: Plege = {
             "type": "publicKey"
           },
           {
-            "name": "accounts",
+            "name": "additionalAccounts",
             "type": {
-              "vec": {
-                "defined": "AccountMetaBorsh"
-              }
+              "vec": "bool"
             }
           },
           {

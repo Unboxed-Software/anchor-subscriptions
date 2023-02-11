@@ -15,8 +15,7 @@ import {
     THREAD_PROGRAM,
     subscriptionThreadKey
 } from "../utils/basic-functions"
-import { Account, keypairIdentity, Metaplex, mockStorage, token, TransactionBuilder } from "@metaplex-foundation/js"
-import { PROGRAM_ADDRESS as METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata'
+import { keypairIdentity, Metaplex, mockStorage } from "@metaplex-foundation/js"
 
 anchor.setProvider(anchor.AnchorProvider.env())
 const provider = anchor.AnchorProvider.env()
@@ -43,9 +42,6 @@ let referralTreasuryTokenAcct: anchor.web3.PublicKey = null
 
 let referralAgentsCollectionNFT = null
 let referralAgentNFT= null
-
-const callbackProgramId = new anchor.web3.PublicKey("2Mv4SLASEdH47uUB73n4Ft13ufzJoS2jomis27kqfLyW")
-//const callbackProgramId = new anchor.web3.PublicKey("5sNX72Q73PcBLCmxScHjUbRAX1F8KPa7wr1fKGnSr9sm")
 
 describe("test callback ix", async () => {
     const [app, bump] = await anchor.web3.PublicKey.findProgramAddressSync(
@@ -217,35 +213,32 @@ describe("test callback ix", async () => {
             preflightCommitment: "confirmed"
         })
     
-        // static programs needed for split_payment ix
-        const accounts: AccountMeta[] = [
-            {pubkey: app, isSigner: false, isWritable: false},
-            {pubkey: authority.publicKey, isSigner: false, isWritable: false},
-            {pubkey: referralship, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.metadataAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentNFT.tokenAddress, isSigner: false, isWritable: false},
-            {pubkey: referralTreasuryTokenAcct, isSigner: false, isWritable: true},
-            {pubkey: referralAgentsCollectionNFT.mintAddress, isSigner: false, isWritable: false},
-            {pubkey: referralAgentsCollectionNFT.metadataAddress, isSigner: false, isWritable: false},
-            {pubkey: tokenMint, isSigner: false, isWritable: false},
-            {pubkey: treasuryATA, isSigner: false, isWritable: true},
-            {pubkey: program.programId, isSigner: false, isWritable: false},
-            {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false}
-            // subscription, will be dynamic
-            // tier, will be dynamic
-            // subscriber, will be dynamic
-            // referral, will be dynamic
+        // define static accounts' mutability
+        const accounts: boolean[] = [
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            true
         ]
 
         const ixCallback: Callback = {
-            programId: callbackProgramId,
-            accounts: accounts,
+            programId: referralProgram.programId,
+            additionalAccounts: accounts,
             ixData: null,
             ixName: "split_payment"
         }
 
-        const registerTx = await program.methods.registerCallback(1, ixCallback)
+        const registerTx = await program.methods.registerPaymentCallback(1, ixCallback)
         .accounts({
             app: app,
             auth: authority.publicKey
@@ -258,9 +251,7 @@ describe("test callback ix", async () => {
         })
         await provider.connection.confirmTransaction(registerTx)
 
-        const appPDA = await program.account.app.fetch(app)
-        //console.log(appPDA.callback.accounts)
-        console.log("Callback registered for program: ", callbackProgramId)
+        console.log("Callback registered for program: ", referralProgram.programId)
     })
     it("mint tokens to treasury token acccount", async () => {
         // mint tokens to the newly created treasury token account
@@ -365,8 +356,7 @@ describe("test callback ix", async () => {
             subscriptionThread: thread,
         })
         .remainingAccounts([
-            {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
-            {pubkey: referralPda, isSigner: false, isWritable: false},
+            {pubkey: referralProgram.programId, isSigner: false, isWritable: false},
             {pubkey: authority.publicKey, isSigner: false, isWritable: false},
             {pubkey: referralship, isSigner: false, isWritable: false},
             {pubkey: referralAgentNFT.mintAddress, isSigner: false, isWritable: false},
@@ -378,9 +368,9 @@ describe("test callback ix", async () => {
             {pubkey: tokenMint, isSigner: false, isWritable: false},
             {pubkey: treasuryATA, isSigner: false, isWritable: true},
             {pubkey: program.programId, isSigner: false, isWritable: false},
-            {pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
-            {pubkey: callbackProgramId, isSigner: false, isWritable: false},
-            {pubkey: refereeAta, isSigner: false, isWritable: true}
+            {pubkey: subscriber.publicKey, isSigner: false, isWritable: false},
+            {pubkey: referralPda, isSigner: false, isWritable: false},
+            {pubkey: refereeAta, isSigner: false, isWritable: true},
         ])
         .rpc({
             skipPreflight: true,

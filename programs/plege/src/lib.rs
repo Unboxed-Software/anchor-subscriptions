@@ -69,7 +69,7 @@ pub mod plege {
         instructions::switch_subscription_tier(ctx)
     }
 
-    pub fn register_callback(ctx: Context<RegisterCallback>, app_id: u8, callback: Callback) -> Result<()> {
-        instructions::register_callback(ctx, app_id, callback)
+    pub fn register_payment_callback(ctx: Context<RegisterPaymentCallback>, app_id: u8, callback: Callback) -> Result<()> {
+        instructions::register_payment_callback(ctx, app_id, callback)
     }
 }

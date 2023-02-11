@@ -7,7 +7,7 @@ use anchor_lang::{
 
 #[derive(Accounts)]
 #[instruction(app_id: u8)]
-pub struct RegisterCallback<'info> {
+pub struct RegisterPaymentCallback<'info> {
     #[account(
         mut,
         seeds = ["APP".as_bytes(), auth.key().as_ref(), app_id.to_be_bytes().as_ref()],
@@ -18,7 +18,7 @@ pub struct RegisterCallback<'info> {
     pub auth: Signer<'info>
 }
 
-pub fn register_callback(ctx: Context<RegisterCallback>, _app_id: u8, callback: Callback) -> Result<()> {
+pub fn register_payment_callback(ctx: Context<RegisterPaymentCallback>, _app_id: u8, callback: Callback) -> Result<()> {
     let app = &mut ctx.accounts.app;
 
     msg!("Registering Callback...");
