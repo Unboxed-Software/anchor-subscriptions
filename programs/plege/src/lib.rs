@@ -8,7 +8,7 @@ use clockwork_sdk::ThreadResponse;
 use instructions::*;
 use state::{Interval, Callback};
 
-declare_id!("Azgaa8wDLxi3udwmoz8CMt1Y4wqcRcVxNM2kfg4Vp5H4");
+declare_id!("7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA");
 
 #[program]
 pub mod plege {
