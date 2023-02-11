@@ -8,7 +8,7 @@ export type AccountMeta = {
 
 export type Callback = {
     programId: web3.PublicKey,
-    accounts: AccountMeta[],
+    additionalAccounts: boolean[],
     //ixData: Buffer
     ixData: number,
     ixName: string
