@@ -30,7 +30,7 @@ describe("basic flow", () => {
 
   it("creates app", async () => {
     await program.methods
-      .createApp(1, "Test App")
+      .createApp(1, "Test App", null)
       .accounts({
         mint: global.mint,
         auth: global.testKeypairs.colossal.publicKey,
@@ -40,6 +40,7 @@ describe("basic flow", () => {
       .rpc()
 
     const appPDA = await program.account.app.fetch(app)
+    console.log(appPDA.callback)
     expect(appPDA.auth.toBase58()).to.equal(
       global.testKeypairs.colossal.publicKey.toBase58()
     )

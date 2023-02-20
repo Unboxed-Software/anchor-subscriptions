@@ -27,31 +27,20 @@ pub struct SplitPayment<'info> {
         bump
     )]
     pub app: Account<'info, App>,
-    /// CHECK: only being used for seeds.
-    pub app_authority: UncheckedAccount<'info>,
     #[account(
         seeds = [SUBSCRIPTION.as_bytes(), app.key().as_ref(), subscriber.key().as_ref()],
         seeds::program = plege_program.key(),
         bump
     )]
     pub subscription: Box<Account<'info, Subscription>>,
-    /// CHECK: Just needs to be a system account.
-    pub subscriber: UncheckedAccount<'info>,
     #[account(
         constraint = subscription.tier == tier.key(),
         has_one = app
     )]
     pub tier: Box<Account<'info, Tier>>,
-    #[account(
-        seeds = [
-            REFERRAL.as_bytes(),
-            app.key().as_ref(),
-            subscription.key().as_ref(),
-            referral_agent_nft_mint.key().as_ref()
-        ],
-        bump
-    )]
-    pub referral: Box<Account<'info, Referral>>,
+    pub token_program: Program<'info, Token>,
+    /// CHECK: only being used for seeds.
+    pub app_authority: UncheckedAccount<'info>,
     #[account(
         seeds = [REFERRALSHIP.as_bytes(), app.key().as_ref()],
         bump
@@ -76,7 +65,18 @@ pub struct SplitPayment<'info> {
     )]
     pub treasury_token_account: Box<Account<'info, TokenAccount>>,
     pub plege_program: Program<'info, Plege>,
-    pub token_program: Program<'info, Token>,
+    /// CHECK: Just needs to be a system account.
+    pub subscriber: UncheckedAccount<'info>,
+    #[account(
+        seeds = [
+            REFERRAL.as_bytes(),
+            app.key().as_ref(),
+            subscription.key().as_ref(),
+            referral_agent_nft_mint.key().as_ref()
+        ],
+        bump
+    )]
+    pub referral: Box<Account<'info, Referral>>,
 }
 
 pub fn split_payment<'info>(ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>) -> Result<()> {
@@ -207,6 +207,7 @@ pub fn split_payment<'info>(ctx: Context<'_, '_, '_, 'info, SplitPayment<'info>>
     let mut visited = HashSet::new();
 
     for token_account_info in ctx.remaining_accounts {
+
         if visited.contains(&token_account_info.key()) {
             return Err(ReferralError::DuplicateSplit.into());
         }

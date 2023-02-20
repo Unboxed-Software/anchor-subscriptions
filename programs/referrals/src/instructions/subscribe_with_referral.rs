@@ -187,6 +187,7 @@ pub fn subscribe_with_referral(ctx: Context<SubscribeWithReferral>) -> Result<()
         create_subscription_accounts,
     );
 
+    msg!("Calling plege program");
     plege::cpi::create_subscription(create_subscription_context)?;
 
     // CPI to add callback

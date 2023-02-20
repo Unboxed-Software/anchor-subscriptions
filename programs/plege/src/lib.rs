@@ -6,7 +6,7 @@ pub mod state;
 
 use clockwork_sdk::ThreadResponse;
 use instructions::*;
-use state::Interval;
+use state::{Interval, Callback};
 
 declare_id!("7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA");
 
@@ -49,7 +49,7 @@ pub mod plege {
         instructions::close_subscription_account(ctx, subscription_bump)
     }
 
-    pub fn complete_payment(ctx: Context<CompletePayment>) -> Result<ThreadResponse> {
+    pub fn complete_payment<'info>(ctx: Context<'_, '_, '_, 'info, CompletePayment<'info>>) -> Result<ThreadResponse> {
         instructions::complete_payment(ctx)
     }
 
@@ -67,5 +67,9 @@ pub mod plege {
 
     pub fn switch_subscription_tier(ctx: Context<SwitchSubscriptionTier>) -> Result<()> {
         instructions::switch_subscription_tier(ctx)
+    }
+
+    pub fn register_payment_callback(ctx: Context<RegisterPaymentCallback>, app_id: u8, callback: Callback) -> Result<()> {
+        instructions::register_payment_callback(ctx, app_id, callback)
     }
 }

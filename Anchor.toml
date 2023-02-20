@@ -6,6 +6,7 @@ skip-lint = false
 referrals = "AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC"
 plege = "7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA"
 
+
 [registry]
 url = "https://api.apr.dev"
 
@@ -15,6 +16,7 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha --require tests/utils/globalSetup.ts -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
 
 [workspace]
 types = "client/shared/idl/"

@@ -81,7 +81,10 @@ export type Plege = {
                 "path": "auth"
               }
             ]
-          }
+          },
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "mint",
@@ -191,7 +194,10 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -369,7 +375,10 @@ export type Plege = {
         {
           "name": "subscription",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "tier"
+          ]
         },
         {
           "name": "app",
@@ -379,7 +388,10 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "destination",
@@ -418,12 +430,18 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -444,12 +462,18 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -470,12 +494,18 @@ export type Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -501,12 +531,18 @@ export type Plege = {
         {
           "name": "oldTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "newTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -531,7 +567,10 @@ export type Plege = {
                 "path": "subscriber"
               }
             ]
-          }
+          },
+          "relations": [
+            "subscriber"
+          ]
         },
         {
           "name": "subscriber",
@@ -565,6 +604,52 @@ export type Plege = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "registerPaymentCallback",
+      "accounts": [
+        {
+          "name": "app",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "APP"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "auth"
+              },
+              {
+                "kind": "arg",
+                "type": "u8",
+                "path": "app_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "auth",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "appId",
+          "type": "u8"
+        },
+        {
+          "name": "callback",
+          "type": {
+            "defined": "Callback"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -592,6 +677,14 @@ export type Plege = {
           {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "callback",
+            "type": {
+              "option": {
+                "defined": "Callback"
+              }
+            }
           }
         ]
       }
@@ -698,6 +791,56 @@ export type Plege = {
     }
   ],
   "types": [
+    {
+      "name": "Callback",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programId",
+            "type": "publicKey"
+          },
+          {
+            "name": "additionalAccounts",
+            "type": {
+              "vec": "bool"
+            }
+          },
+          {
+            "name": "ixData",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "ixName",
+            "type": {
+              "option": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AccountMetaBorsh",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
     {
       "name": "Interval",
       "type": {
@@ -823,7 +966,10 @@ export const IDL: Plege = {
                 "path": "auth"
               }
             ]
-          }
+          },
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "mint",
@@ -933,7 +1079,10 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -1111,7 +1260,10 @@ export const IDL: Plege = {
         {
           "name": "subscription",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "tier"
+          ]
         },
         {
           "name": "app",
@@ -1121,7 +1273,10 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "destination",
@@ -1160,12 +1315,18 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -1186,12 +1347,18 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -1212,12 +1379,18 @@ export const IDL: Plege = {
         {
           "name": "tier",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "app",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "auth"
+          ]
         },
         {
           "name": "auth",
@@ -1243,12 +1416,18 @@ export const IDL: Plege = {
         {
           "name": "oldTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "newTier",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "app"
+          ]
         },
         {
           "name": "subscription",
@@ -1273,7 +1452,10 @@ export const IDL: Plege = {
                 "path": "subscriber"
               }
             ]
-          }
+          },
+          "relations": [
+            "subscriber"
+          ]
         },
         {
           "name": "subscriber",
@@ -1307,6 +1489,52 @@ export const IDL: Plege = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "registerPaymentCallback",
+      "accounts": [
+        {
+          "name": "app",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "APP"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "auth"
+              },
+              {
+                "kind": "arg",
+                "type": "u8",
+                "path": "app_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "auth",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "appId",
+          "type": "u8"
+        },
+        {
+          "name": "callback",
+          "type": {
+            "defined": "Callback"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1334,6 +1562,14 @@ export const IDL: Plege = {
           {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "callback",
+            "type": {
+              "option": {
+                "defined": "Callback"
+              }
+            }
           }
         ]
       }
@@ -1440,6 +1676,56 @@ export const IDL: Plege = {
     }
   ],
   "types": [
+    {
+      "name": "Callback",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programId",
+            "type": "publicKey"
+          },
+          {
+            "name": "additionalAccounts",
+            "type": {
+              "vec": "bool"
+            }
+          },
+          {
+            "name": "ixData",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "ixName",
+            "type": {
+              "option": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AccountMetaBorsh",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
     {
       "name": "Interval",
       "type": {
