@@ -1,5 +1,5 @@
-import { BN, web3 } from "@project-serum/anchor"
-import generateFundedKeypair from "./keypair"
+import { BN, web3 } from "@project-serum/anchor";
+import generateFundedKeypair from "./keypair";
 
 export function userAccountKeyFromPubkey(
   pubkey: web3.PublicKey
@@ -7,14 +7,14 @@ export function userAccountKeyFromPubkey(
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("USER_META"), pubkey.toBuffer()],
     global.program.programId
-  )[0]
+  )[0];
 }
 
 export function findUserMetaAddress(pubkey: web3.PublicKey) {
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("USER_META"), pubkey.toBuffer()],
     global.program.programId
-  )
+  );
 }
 
 export function appAccountKey(
@@ -28,7 +28,7 @@ export function appAccountKey(
       new BN(appId).toArrayLike(Buffer, "be", 1),
     ],
     global.program.programId
-  )[0]
+  )[0];
 }
 
 export function findAppAddress(
@@ -43,11 +43,11 @@ export function findAppAddress(
       new BN(appId).toArrayLike(Buffer, "be", 1),
     ],
     programId
-  )
+  );
 }
 
 export function numberToAppId(appId: number): Buffer {
-  return new BN(appId).toArrayLike(Buffer, "be", 1)
+  return new BN(appId).toArrayLike(Buffer, "be", 1);
 }
 
 export function tierAccountKey(
@@ -61,7 +61,7 @@ export function tierAccountKey(
       new BN(tierId).toArrayLike(Buffer, "be", 1),
     ],
     global.program.programId
-  )[0]
+  )[0];
 }
 
 export function subscriptionAccountKey(
@@ -71,7 +71,7 @@ export function subscriptionAccountKey(
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
     global.program.programId
-  )
+  );
 }
 
 export function subscriptionThreadKey(
@@ -84,7 +84,7 @@ export function subscriptionThreadKey(
       Buffer.from("subscriber_thread"),
     ],
     THREAD_PROGRAM
-  )[0]
+  )[0];
 }
 
 export function findSubscriptionAddress(
@@ -95,27 +95,27 @@ export function findSubscriptionAddress(
   return web3.PublicKey.findProgramAddressSync(
     [Buffer.from("SUBSCRIPTION"), app.toBuffer(), subscriber.toBuffer()],
     programId
-  )
+  );
 }
 
 export async function createGeneralScaffolding(): Promise<{
-  user
-  app
-  tier1
-  tier2
-  tier3
-  tier4
-  auth
+  user;
+  app;
+  tier1;
+  tier2;
+  tier3;
+  tier4;
+  auth;
 }> {
-  const auth = await generateFundedKeypair(global.connection)
-  const user = userAccountKeyFromPubkey(auth.publicKey)
-  const app = appAccountKey(auth.publicKey, 1)
-  const tier1 = tierAccountKey(app, 1)
-  const tier2 = tierAccountKey(app, 2)
-  const tier3 = tierAccountKey(app, 3)
-  const tier4 = tierAccountKey(app, 4)
+  const auth = await generateFundedKeypair(global.connection);
+  const user = userAccountKeyFromPubkey(auth.publicKey);
+  const app = appAccountKey(auth.publicKey, 1);
+  const tier1 = tierAccountKey(app, 1);
+  const tier2 = tierAccountKey(app, 2);
+  const tier3 = tierAccountKey(app, 3);
+  const tier4 = tierAccountKey(app, 4);
 
-  const transaction = new web3.Transaction()
+  const transaction = new web3.Transaction();
   transaction.add(
     await global.program.methods
       .createUser()
@@ -170,17 +170,17 @@ export async function createGeneralScaffolding(): Promise<{
       })
       .signers([auth])
       .instruction()
-  )
+  );
 
-  const sig = await global.connection.sendTransaction(transaction, [auth])
+  const sig = await global.connection.sendTransaction(transaction, [auth]);
 
-  const latestBlockHash = await global.connection.getLatestBlockhash()
+  const latestBlockHash = await global.connection.getLatestBlockhash();
 
   await global.connection.confirmTransaction({
     blockhash: latestBlockHash.blockhash,
     lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
     signature: sig,
-  })
+  });
 
   return {
     auth,
@@ -190,7 +190,7 @@ export async function createGeneralScaffolding(): Promise<{
     tier2,
     tier3,
     tier4,
-  }
+  };
 }
 
 export async function createSubscription(
@@ -199,16 +199,16 @@ export async function createSubscription(
   subscriber: web3.Keypair,
   subscriberAta: web3.PublicKey
 ): Promise<{
-  subscription: any
-  subscriptionThread: any
-  subscriptionBump: number
+  subscription: any;
+  subscriptionThread: any;
+  subscriptionBump: number;
 }> {
   let [subscription, subscriptionBump] = subscriptionAccountKey(
     subscriber.publicKey,
     app
-  )
+  );
 
-  let thread = subscriptionThreadKey(subscription)
+  let thread = subscriptionThreadKey(subscription);
 
   await global.program.methods
     .createSubscription()
@@ -221,14 +221,14 @@ export async function createSubscription(
       subscriberAta,
     })
     .signers([subscriber])
-    .rpc()
+    .rpc();
 
-  return { subscription, subscriptionThread: thread, subscriptionBump }
+  return { subscription, subscriptionThread: thread, subscriptionBump };
 }
 
 export const THREAD_PROGRAM = new web3.PublicKey(
   "3XXuUFfweXBwFgFfYaejLvZE4cGZiHgKiGfMtdxNzYmv"
-)
+);
 
 export async function cancelSubscription(
   app: web3.PublicKey,
@@ -236,21 +236,19 @@ export async function cancelSubscription(
   subscriber: web3.Keypair,
   subscriberAta: web3.PublicKey
 ) {
-  let [subscription] = subscriptionAccountKey(subscriber.publicKey, app)
-  let thread = subscriptionThreadKey(subscription)
+  let [subscription] = subscriptionAccountKey(subscriber.publicKey, app);
 
   await global.program.methods
     .cancelSubscription()
     .accounts({
       app,
       tier,
+      subscription,
       subscriber: subscriber.publicKey,
       subscriberAta,
-      subscriptionThread: thread,
-      threadProgram: THREAD_PROGRAM,
     })
     .signers([subscriber])
-    .rpc()
+    .rpc();
 }
 
 export async function completePayment(
@@ -260,8 +258,6 @@ export async function completePayment(
   subscriberAta: web3.PublicKey,
   subscription: web3.PublicKey
 ) {
-  const thread = subscriptionThreadKey(subscription)
-
   await global.program.methods
     .completePayment()
     .accounts({
@@ -270,7 +266,6 @@ export async function completePayment(
       destination,
       subscriberAta,
       subscription,
-      subscriptionThread: thread,
     })
-    .rpc()
+    .rpc();
 }

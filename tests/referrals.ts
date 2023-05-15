@@ -1,28 +1,32 @@
-import { assert } from "chai"
+import { assert } from "chai";
 import {
   AccountMeta,
   Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
-} from "@solana/web3.js"
-import * as anchor from "@project-serum/anchor"
-import { Referrals } from "../target/types/referrals"
-import { Plege } from "../target/types/plege"
-import generateFundedKeypair from "./utils/keypair"
+} from "@solana/web3.js";
+import * as anchor from "@project-serum/anchor";
+import { Referrals } from "../target/types/referrals";
+import { Plege } from "../target/types/plege";
+import generateFundedKeypair from "./utils/keypair";
 import {
   findAppAddress,
   findSubscriptionAddress,
   tierAccountKey,
   userAccountKeyFromPubkey,
-} from "./utils/basic-functions"
+} from "./utils/basic-functions";
 import {
   createAssociatedTokenAccount,
   createMint,
   mintTo,
   TOKEN_PROGRAM_ID,
-} from "@solana/spl-token"
-import { keypairIdentity, Metaplex, mockStorage } from "@metaplex-foundation/js"
+} from "@solana/spl-token";
+import {
+  keypairIdentity,
+  Metaplex,
+  mockStorage,
+} from "@metaplex-foundation/js";
 
 function findReferralshipAddress(
   app: PublicKey,
@@ -31,7 +35,7 @@ function findReferralshipAddress(
   return PublicKey.findProgramAddressSync(
     [Buffer.from("REFERRALSHIP"), app.toBuffer()],
     programId
-  )
+  );
 }
 
 function findReferralAddress(
@@ -48,7 +52,7 @@ function findReferralAddress(
       referralAgentNFTMint.toBuffer(),
     ],
     programId
-  )
+  );
 }
 
 function findReferralshipTreasuryAccountAddress(
@@ -64,23 +68,23 @@ function findReferralshipTreasuryAccountAddress(
       treasuryMint.toBuffer(),
     ],
     programId
-  )
+  );
 }
 
 describe("referrals", () => {
-  anchor.setProvider(anchor.AnchorProvider.env())
+  anchor.setProvider(anchor.AnchorProvider.env());
   const referralProgram = anchor.workspace
-    .Referrals as anchor.Program<Referrals>
-  const subscriptionProgram = anchor.workspace.Plege as anchor.Program<Plege>
+    .Referrals as anchor.Program<Referrals>;
+  const subscriptionProgram = anchor.workspace.Plege as anchor.Program<Plege>;
 
   it("creates a referralship", async () => {
-    const { connection } = anchor.getProvider()
-    const appAuthorityKeypair = await generateFundedKeypair(connection)
-    const referralAgentKeypair = await generateFundedKeypair(connection)
-    const subscriberKeypair = await generateFundedKeypair(connection)
-    const stakeholder1Keypair = await generateFundedKeypair(connection)
-    const stakeholder2Keypair = await generateFundedKeypair(connection)
-    const treasuryAuthorityKeypair = await generateFundedKeypair(connection)
+    const { connection } = anchor.getProvider();
+    const appAuthorityKeypair = await generateFundedKeypair(connection);
+    const referralAgentKeypair = await generateFundedKeypair(connection);
+    const subscriberKeypair = await generateFundedKeypair(connection);
+    const stakeholder1Keypair = await generateFundedKeypair(connection);
+    const stakeholder2Keypair = await generateFundedKeypair(connection);
+    const treasuryAuthorityKeypair = await generateFundedKeypair(connection);
 
     // create a token mint
     const treasuryMint = await createMint(
@@ -89,43 +93,43 @@ describe("referrals", () => {
       treasuryAuthorityKeypair.publicKey,
       treasuryAuthorityKeypair.publicKey,
       0
-    )
+    );
 
     const referralAgentTokenAccount = await createAssociatedTokenAccount(
       connection,
       referralAgentKeypair,
       treasuryMint,
       referralAgentKeypair.publicKey
-    )
+    );
 
     const subscriberTokenAccount = await createAssociatedTokenAccount(
       connection,
       subscriberKeypair,
       treasuryMint,
       subscriberKeypair.publicKey
-    )
+    );
 
     const stakeholder1TokenAccount = await createAssociatedTokenAccount(
       connection,
       stakeholder1Keypair,
       treasuryMint,
       stakeholder1Keypair.publicKey
-    )
+    );
 
     const stakeholder2TokenAccount = await createAssociatedTokenAccount(
       connection,
       stakeholder1Keypair,
       treasuryMint,
       stakeholder2Keypair.publicKey
-    )
+    );
 
     const metaplex = Metaplex.make(anchor.getProvider().connection)
       .use(keypairIdentity(appAuthorityKeypair))
-      .use(mockStorage())
+      .use(mockStorage());
 
     const userMetaAddress = userAccountKeyFromPubkey(
       appAuthorityKeypair.publicKey
-    )
+    );
 
     // create user meta -- required by the subscription program's createApp instruction
     const createUserMetaIx = await subscriptionProgram.methods
@@ -135,22 +139,22 @@ describe("referrals", () => {
         auth: appAuthorityKeypair.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .instruction()
+      .instruction();
 
     // create an app
-    const appId = 1
+    const appId = 1;
     const [appAddress] = findAppAddress(
       appAuthorityKeypair.publicKey,
       appId,
       subscriptionProgram.programId
-    )
+    );
 
     const [referralshipTreasuryAddress] =
       findReferralshipTreasuryAccountAddress(
         appAddress,
         treasuryMint,
         referralProgram.programId
-      )
+      );
 
     const createAppIx = await subscriptionProgram.methods
       .createApp(appId, "super app")
@@ -162,15 +166,15 @@ describe("referrals", () => {
         treasury: referralshipTreasuryAddress,
         systemProgram: SystemProgram.programId,
       })
-      .instruction()
+      .instruction();
 
     const tierArgs = {
       name: "basic",
       id: 1,
       price: 100,
       interval: { month: {} }, // monthly
-    }
-    const tierAddress = tierAccountKey(appAddress, 1)
+    };
+    const tierAddress = tierAccountKey(appAddress, 1);
 
     const createTierIx = await subscriptionProgram.methods
       .createTier(
@@ -185,23 +189,23 @@ describe("referrals", () => {
         signer: appAuthorityKeypair.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .instruction()
+      .instruction();
 
     const createUserAndAppTx = new Transaction()
       .add(createUserMetaIx)
       .add(createAppIx)
-      .add(createTierIx)
+      .add(createTierIx);
 
     await anchor
       .getProvider()
       .sendAndConfirm(createUserAndAppTx, [appAuthorityKeypair], {
         skipPreflight: true,
-      })
+      });
 
     const [referralshipAddress] = findReferralshipAddress(
       appAddress,
       referralProgram.programId
-    )
+    );
 
     const referralAgentsCollectionNFT = await metaplex.nfts().create({
       name: "Referral Agents",
@@ -210,7 +214,7 @@ describe("referrals", () => {
       sellerFeeBasisPoints: 0,
       isCollection: true,
       collectionAuthority: appAuthorityKeypair,
-    })
+    });
 
     const referralAgentNFT = await metaplex.nfts().create({
       name: "Referral Agent",
@@ -220,7 +224,7 @@ describe("referrals", () => {
       collection: referralAgentsCollectionNFT.mintAddress,
       collectionAuthority: appAuthorityKeypair,
       tokenOwner: referralAgentKeypair.publicKey,
-    })
+    });
 
     // create a referralship account
     const createReferralshipIx = await referralProgram.methods
@@ -240,39 +244,39 @@ describe("referrals", () => {
         plegeProgram: subscriptionProgram.programId,
         systemProgram: SystemProgram.programId,
       })
-      .instruction()
+      .instruction();
 
-    const createReferralshipTx = new Transaction().add(createReferralshipIx)
+    const createReferralshipTx = new Transaction().add(createReferralshipIx);
 
     await anchor
       .getProvider()
       .sendAndConfirm(createReferralshipTx, [appAuthorityKeypair], {
         skipPreflight: true,
-      })
+      });
 
     const referralship = await referralProgram.account.referralship.fetch(
       referralshipAddress
-    )
+    );
 
-    assert.equal(referralship.appId, appId)
-    assert.equal(referralship.app.toBase58(), appAddress.toBase58())
-    assert.equal(referralship.treasuryMint.toBase58(), treasuryMint.toBase58())
+    assert.equal(referralship.appId, appId);
+    assert.equal(referralship.app.toBase58(), appAddress.toBase58());
+    assert.equal(referralship.treasuryMint.toBase58(), treasuryMint.toBase58());
 
     const [subscriptionAddress] = findSubscriptionAddress(
       subscriberKeypair.publicKey,
       appAddress,
       subscriptionProgram.programId
-    )
+    );
 
     const [referralAddress] = findReferralAddress(
       appAddress,
       subscriptionAddress,
       referralAgentNFT.mintAddress,
       referralProgram.programId
-    )
+    );
 
-    let treasuryInitialBalance = 100_000_000
-    let subscriberInitialBalance = 100_000_000
+    let treasuryInitialBalance = 100_000_000;
+    let subscriberInitialBalance = 100_000_000;
 
     await mintTo(
       connection,
@@ -281,7 +285,7 @@ describe("referrals", () => {
       subscriberTokenAccount,
       treasuryAuthorityKeypair,
       subscriberInitialBalance
-    )
+    );
 
     await mintTo(
       connection,
@@ -290,7 +294,7 @@ describe("referrals", () => {
       referralshipTreasuryAddress,
       treasuryAuthorityKeypair,
       treasuryInitialBalance
-    )
+    );
 
     const subscribeWithReferralIx = await referralProgram.methods
       .subscribeWithReferral()
@@ -313,17 +317,17 @@ describe("referrals", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
-      .instruction()
+      .instruction();
 
     const subscribeWithReferralTx = new Transaction().add(
       subscribeWithReferralIx
-    )
+    );
 
     await anchor
       .getProvider()
       .sendAndConfirm(subscribeWithReferralTx, [subscriberKeypair], {
         skipPreflight: true,
-      })
+      });
 
     let ixAccounts = {
       app: appAddress,
@@ -343,10 +347,10 @@ describe("referrals", () => {
       treasuryTokenAccount: referralshipTreasuryAddress,
       treasuryAuthority: treasuryAuthorityKeypair.publicKey,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     for (let account in ixAccounts) {
-      console.log(account, ixAccounts[account].toBase58())
+      console.log(account, ixAccounts[account].toBase58());
     }
 
     // simulate a call from the subscription program to split payments
@@ -385,11 +389,11 @@ describe("referrals", () => {
           isSigner: false,
         },
       ])
-      .instruction()
+      .instruction();
 
-    let splitTx = new Transaction().add(splitIx)
+    let splitTx = new Transaction().add(splitIx);
     await anchor.getProvider().sendAndConfirm(splitTx, [], {
       skipPreflight: true,
-    })
-  })
-})
+    });
+  });
+});

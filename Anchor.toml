@@ -2,6 +2,10 @@
 seeds = true
 skip-lint = false
 
+[programs.localnet]
+referrals = "AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC"
+plege = "7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA"
+
 [programs.devnet]
 # referrals = "AyiEeNNyt46iRMeN1kNUfBjdu9GdsDxuH7zAg9CgyLRC"
 # plege = "7xMy6CDMk3ANhRBEMorr9A3EJt5qWcQq64MeqGdC9JpA"
@@ -12,7 +16,7 @@ referrals = "ABCWvapL5deLpezrH651ZQSS3XgT1N2nWY87DJiczERz"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

@@ -1,21 +1,21 @@
-import * as anchor from "@project-serum/anchor"
+import * as anchor from "@project-serum/anchor";
 import {
   createAssociatedTokenAccount,
   getAccount,
   mintToChecked,
-} from "@solana/spl-token"
-import { BN, Program } from "@project-serum/anchor"
-import chai from "chai"
-import chaiAsPromised from "chai-as-promised"
+} from "@solana/spl-token";
+import { BN, Program } from "@project-serum/anchor";
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
 import {
   cancelSubscription,
   completePayment,
   createSubscription,
-} from "./utils/basic-functions"
-import { Plege } from "../target/types/plege"
+} from "./utils/basic-functions";
+import { Plege } from "../target/types/plege";
 
-chai.use(chaiAsPromised)
-const expect = chai.expect
+chai.use(chaiAsPromised);
+const expect = chai.expect;
 
 describe("basic flow", () => {
   it("creates user", async () => {
@@ -25,8 +25,8 @@ describe("basic flow", () => {
         auth: global.testKeypairs.colossal.publicKey,
       })
       .signers([global.testKeypairs.colossal])
-      .rpc()
-  })
+      .rpc();
+  });
 
   it("creates app", async () => {
     await program.methods
@@ -37,13 +37,13 @@ describe("basic flow", () => {
         treasury: global.testKeypairs.hacker.publicKey,
       })
       .signers([global.testKeypairs.colossal])
-      .rpc()
+      .rpc();
 
-    const appPDA = await program.account.app.fetch(app)
+    const appPDA = await program.account.app.fetch(app);
     expect(appPDA.auth.toBase58()).to.equal(
       global.testKeypairs.colossal.publicKey.toBase58()
-    )
-  })
+    );
+  });
 
   it("create tier", async () => {
     await program.methods
@@ -53,13 +53,13 @@ describe("basic flow", () => {
         signer: global.testKeypairs.colossal.publicKey,
       })
       .signers([global.testKeypairs.colossal])
-      .rpc()
+      .rpc();
 
-    const tierPDA = await program.account.tier.fetch(tier)
-    expect(tierPDA.app.toBase58()).to.equal(app.toBase58())
-    expect(tierPDA.price.toNumber()).to.equal(10)
-    expect((tierPDA.interval as any).month).to.not.equal(undefined)
-  })
+    const tierPDA = await program.account.tier.fetch(tier);
+    expect(tierPDA.app.toBase58()).to.equal(app.toBase58());
+    expect(tierPDA.price.toNumber()).to.equal(10);
+    expect((tierPDA.interval as any).month).to.not.equal(undefined);
+  });
 
   it("create subscription", async () => {
     const { subscription, subscriptionThread } = await createSubscription(
@@ -67,42 +67,42 @@ describe("basic flow", () => {
       tier,
       global.testKeypairs.subscriber,
       subscriberAta
-    )
+    );
 
     const subscriptionPDA = await program.account.subscription.fetch(
       subscription
-    )
+    );
 
-    expect(subscriptionPDA.app.toBase58()).to.equal(app.toBase58())
-    expect(subscriptionPDA.tier.toBase58()).to.equal(tier.toBase58())
+    expect(subscriptionPDA.app.toBase58()).to.equal(app.toBase58());
+    expect(subscriptionPDA.tier.toBase58()).to.equal(tier.toBase58());
     expect(subscriptionPDA.subscriber.toBase58()).to.equal(
       global.testKeypairs.subscriber.publicKey.toBase58()
-    )
-    const startTime = new Date(subscriptionPDA.start.toNumber() * 1000)
-    expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
+    );
+    const startTime = new Date(subscriptionPDA.start.toNumber() * 1000);
+    expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000);
     expect(subscriptionPDA.start.toNumber()).to.equal(
       subscriptionPDA.payPeriodExpiration.toNumber()
-    )
-  })
+    );
+  });
 
   it("completes payment", async () => {
-    const before = await program.account.subscription.fetch(subscription)
+    const before = await program.account.subscription.fetch(subscription);
 
-    await completePayment(app, tier, hackerAta, subscriberAta, subscription)
+    await completePayment(app, tier, hackerAta, subscriberAta, subscription);
 
     const subscriptionPDA = await program.account.subscription.fetch(
       subscription
-    )
+    );
 
-    const ownerATA = await getAccount(global.connection, hackerAta)
+    const ownerATA = await getAccount(global.connection, hackerAta);
 
-    let payPeriod = new Date(before.payPeriodExpiration.toNumber() * 1000)
-    payPeriod.setMonth(payPeriod.getMonth() + 1)
+    let payPeriod = new Date(before.payPeriodExpiration.toNumber() * 1000);
+    payPeriod.setMonth(payPeriod.getMonth() + 1);
     expect(subscriptionPDA.payPeriodExpiration.toNumber() * 1000).to.equal(
       payPeriod.getTime()
-    )
-    expect(Number(ownerATA.amount)).to.equal(10)
-  })
+    );
+    expect(Number(ownerATA.amount)).to.equal(10);
+  });
 
   it("cancels subscription", async () => {
     await cancelSubscription(
@@ -110,13 +110,13 @@ describe("basic flow", () => {
       tier,
       global.testKeypairs.subscriber,
       subscriberAta
-    )
+    );
 
     const subscriptionPDA = await program.account.subscription.fetch(
       subscription
-    )
-    expect(subscriptionPDA.acceptNewPayments).to.equal(false)
-  })
+    );
+    expect(subscriptionPDA.acceptNewPayments).to.equal(false);
+  });
 
   it("attempting to create subscription again fails", async () => {
     expect(
@@ -126,10 +126,10 @@ describe("basic flow", () => {
         global.testKeypairs.subscriber,
         subscriberAta
       )
-    ).to.eventually.be.rejected
-  })
+    ).to.eventually.be.rejected;
+  });
 
-  // it("can close subscription")
+  // it("can close subscription");
 
   // it("can create subscription again after closing account", async () => {
   //   await global.program.methods
@@ -143,83 +143,85 @@ describe("basic flow", () => {
   //       subscriberAta,
   //     })
   //     .signers([global.testKeypairs.subscriber])
-  //     .rpc()
+  //     .rpc();
 
   //   const subscriptionPDA = await global.program.account.subscription.fetch(
   //     subscription
-  //   )
+  //   );
 
-  //   expect(subscriptionPDA.app.toBase58()).to.equal(app.toBase58())
-  //   expect(subscriptionPDA.tier.toBase58()).to.equal(tier.toBase58())
+  //   expect(subscriptionPDA.app.toBase58()).to.equal(app.toBase58());
+  //   expect(subscriptionPDA.tier.toBase58()).to.equal(tier.toBase58());
   //   expect(subscriptionPDA.subscriber.toBase58()).to.equal(
   //     global.testKeypairs.subscriber.publicKey.toBase58()
-  //   )
-  //   const startTime = new Date(subscriptionPDA.start * 1000)
-  //   expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000)
+  //   );
+  //   const startTime = new Date(subscriptionPDA.start * 1000);
+  //   expect(new Date().getTime() - startTime.getTime()).to.be.lessThan(5000);
   //   expect(subscriptionPDA.start.toNumber()).to.equal(
   //     subscriptionPDA.payPeriodExpiration.toNumber()
-  //   )
-  // })
+  //   );
+  // });
 
   before(async () => {
-    program = global.program as Program<Plege>
-    ;[app] = anchor.web3.PublicKey.findProgramAddressSync(
+    program = global.program as Program<Plege>;
+    [app] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("APP"),
         global.testKeypairs.colossal.publicKey.toBuffer(),
         new BN([1]).toArrayLike(Buffer, "be", 1),
       ],
       program.programId
-    )
-    ;[tier] = anchor.web3.PublicKey.findProgramAddressSync(
+    );
+    [tier] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("SUBSCRIPTION_TIER"),
         app.toBuffer(),
         new BN([1]).toArrayLike(Buffer, "be", 1),
       ],
       program.programId
-    )
-    ;[subscription] = anchor.web3.PublicKey.findProgramAddressSync(
+    );
+    [subscription] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("SUBSCRIPTION"),
         app.toBuffer(),
         global.testKeypairs.subscriber.publicKey.toBuffer(),
       ],
       program.programId
-    )
+    );
 
     threadProgram = new anchor.web3.PublicKey(
       "3XXuUFfweXBwFgFfYaejLvZE4cGZiHgKiGfMtdxNzYmv"
-    )
-    ;[thread] = anchor.web3.PublicKey.findProgramAddressSync(
+    );
+    [thread] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("thread"),
         subscription.toBuffer(),
         Buffer.from("subscriber_thread"),
       ],
       threadProgram
-    )
+    );
 
     colossalAta = await createAssociatedTokenAccount(
       global.connection,
       global.testKeypairs.colossal,
       global.mint,
       global.testKeypairs.colossal.publicKey
-    )
+    ).catch((err) => {
+      console.log(err);
+    });
 
     subscriberAta = await createAssociatedTokenAccount(
       global.connection,
       global.testKeypairs.subscriber,
       global.mint,
       global.testKeypairs.subscriber.publicKey
-    )
+    );
 
     hackerAta = await createAssociatedTokenAccount(
       global.connection,
       global.testKeypairs.hacker,
       global.mint,
       global.testKeypairs.hacker.publicKey
-    )
+    );
 
     await mintToChecked(
       global.connection,
@@ -229,8 +231,8 @@ describe("basic flow", () => {
       global.testKeypairs.colossal.publicKey,
       1000 * 10 ** 5,
       5
-    )
-  })
+    );
+  });
 
   let colossalAta,
     subscriberAta,
@@ -239,7 +241,7 @@ describe("basic flow", () => {
     tier,
     subscription,
     thread,
-    threadProgram
+    threadProgram;
 
-  let program: Program<Plege>
-})
+  let program: Program<Plege>;
+});
